@@ -26,6 +26,7 @@ public:
     double inline y() const {return m_y;};
     double inline u() const {return m_u;};
     double inline v() const {return m_v;};
+    size_t inline index() const {return m_index;};
     bool setSpeed(double u, double v);
 
     size_t inline index() const {return m_index;};

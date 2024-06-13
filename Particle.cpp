@@ -43,7 +43,55 @@ bool Particle::setSpeed(double u, double v)
 
 bool Particle::computeTimeBeforeNextWall()
 {
-    m_timeBeforeNextWall = 10;
+    if (m_u > 0) 
+    {// next wall is on the right 
+        if (m_y > 0)
+        { // next wall is quadran 1
+            m_timeBeforeNextWall = 10;
+        } 
+        else 
+        {// next wall is quadran 4
+            m_timeBeforeNextWall = 10;
+        }
+    }
+    else if (m_u < 0) 
+    {// next wall is on the left 
+        if (m_y > 0)
+        { // next wall is quadran 2
+            m_timeBeforeNextWall = 10;
+        } 
+        else 
+        {// next wall is quadran 3
+            m_timeBeforeNextWall = 10;
+        }
+    }
+    else if (m_v > 0) 
+    {// next wall is on the top 
+        if (m_x > 0)
+        { // next wall is quadran 1
+            m_timeBeforeNextWall = 10;
+        } 
+        else 
+        {// next wall is quadran 2
+            m_timeBeforeNextWall = 10;
+        }
+    }
+    else if (m_v < 0) 
+    {// next wall is on the bottom 
+        if (m_x > 0)
+        { // next wall is quadran 4
+            m_timeBeforeNextWall = 10;
+        } 
+        else 
+        {// next wall is quadran 3
+            m_timeBeforeNextWall = 10;
+        }
+    }
+    else 
+    {
+        return false; 
+    }
+    return true; 
 }
 
 
@@ -73,6 +121,20 @@ bool collide(Particle& p1, Particle& p2)
         p2.set_speed(u, v);
     }
     return true;
+}
+
+double iWillCollide(Particle& p1, Particle& p2) 
+{
+    if ()
+    {
+        if ()
+        {
+            return ??
+        }
+        return 0
+    }
+
+    return 0
 }
 
 

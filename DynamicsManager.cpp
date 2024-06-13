@@ -93,13 +93,21 @@ bool DynamicsManager::run()
     }
     return true;
 }
+
 bool DynamicsManager::initializeCL()
 {
-    for (Particle& particle : m_partList) {
-        particle.move(dt);
+    for (size_t iPart = 0 ; iPart < m_partList.size() ; iPart++) 
+    {
+        for (size_t jPart = iPart+1 ; jPart < m_partList.size() ; jPart++) 
+        {
+            if (p1.index() != p2.index())
+                if (iWillCollide(p1, p2) > 0)
+                    m_CollisionList.addCollision(iWillCollide(p1, p2), p1, p2)
+        }
     }
     return true;
 }
+
 bool DynamicsManager::move(double dt)
 {
     for (Particle& particle : m_partList) {
