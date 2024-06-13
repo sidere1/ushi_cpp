@@ -1,0 +1,5 @@
+.vscode/
+output/
+*.d
+*.o
+prog
