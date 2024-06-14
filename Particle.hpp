@@ -29,12 +29,13 @@ public:
     size_t inline index() const {return m_index;};
     bool setSpeed(double u, double v);
 
-    size_t inline index() const {return m_index;};
-
     friend std::ostream& operator<<(std::ostream& os, const Particle& particle); 
+    double iWillCollide(Particle other);
+
 
 protected: 
-    size_t m_index, m_u, m_v;
+    size_t m_index; 
+    double m_u, m_v;
     double m_x, m_y, m_eps;
     double m_dtBeforeNextWall;
 };

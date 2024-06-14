@@ -25,11 +25,11 @@ class DynamicsManager
 public:
     DynamicsManager(size_t N);
     bool generatePartList();
+    bool generatePartListDebug();
     bool printPartList();
-    
     bool run();
     bool initializeCL();
-    bool move();
+    bool move(double dt);
     bool updateTraj();
     bool collide();
 
