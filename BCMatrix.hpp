@@ -8,6 +8,8 @@ BCMatrix class
 #include<iostream> 
 #include <filesystem>
 #include <Eigen/Dense>
+#include <vector>
+
 
 class BCMatrix 
 {

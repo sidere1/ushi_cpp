@@ -14,7 +14,8 @@ endif
 ifeq ($(UNAME), Linux)
 CXXFLAGS := -std=c++11 -g
 LIBS = -I/usr/include -L/usr/lib
-LINKS = -lboost_system -L/home/silouane/Documents/logiciels/SALOME-9.2.0-UB18.04-SRC/BINARIES-UB18.04/boost/lib/ -lboost_filesystem
+# LINKS = -lboost_system -L/home/silouane/Documents/logiciels/SALOME-9.2.0-UB18.04-SRC/BINARIES-UB18.04/boost/lib/ -lboost_filesystem
+LINKS = 
 endif
 
 # ADD MORE WARNINGS!
@@ -30,7 +31,7 @@ ifeq ($(UNAME), Darwin)
 	gtime -v ./prog
 endif
 ifeq ($(UNAME), Linux)
-	# /usr/bin/time -v ./makeMeFlatAsEarth -v ~/Documents/Brouillon/JSV/main.tex		
+	/usr/bin/time -v ./prog 
 endif
 
 clean:

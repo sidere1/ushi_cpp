@@ -72,8 +72,8 @@ bool DynamicsManager::generatePartList()
 
 bool DynamicsManager::generatePartListDebug()
 {
-    Particle p1 = Particle(1, 0, 0, 1, 0, m_eps);
-    Particle p2 = Particle(2, 10, 10, 0, -1, m_eps);
+    Particle p1 = Particle(1, 0, 0, 0, -1, m_eps);
+    Particle p2 = Particle(2, 0, -10, 0, -1, m_eps);
     m_partList.push_back(p1);
     m_partList.push_back(p2);
     return true;
@@ -95,8 +95,8 @@ bool DynamicsManager::run()
     while (m_time < m_endTime)
     {
         double nextTime = m_CollisionList.nextColTime();
-        // faudrait voir si il y a un wallCollision, move until this time
         double dt = nextTime - m_time;
+        // faudrait voir si il y a un wallCollision, move until this time. Sinon :
         m_time = nextTime;
         cout << "t = " << m_time;
         if (!move(dt))
@@ -154,6 +154,97 @@ bool DynamicsManager::updateTraj()
 }
 bool DynamicsManager::collide()
 {
+    // on récupère les deux particules de la liste 
+    std::pair<size_t, size_t> collidingParts;
+    Particle p1 = m_partList[collidingParts.first];
+    Particle p2 = m_partList[collidingParts.second];
+    // removing from the list all their collisions
+    // updating their speed 
+    updateSpeedFromCollision(p1, p2);
+    // updating their next collisions  
+    for (size_t jPart = 0 ; jPart < m_partList.size() ; jPart++) 
+    {
+        Particle p3 = m_partList[jPart];
+        if (p1.index() != p3.index())
+        {
+            double collTime = p1.iWillCollide(p3);
+            if (collTime > 0) m_CollisionList.addCollision(collTime, p1.index(), p3.index());
+        }
+        if (p2.index() != p3.index())
+        {
+            double collTime = p2.iWillCollide(p3);
+            if (collTime > 0) m_CollisionList.addCollision(collTime, p2.index(), p3.index());
+        }
+    }
+    return true;
+}
+
+bool DynamicsManager::wallCollide(size_t index)
+{
+    // getting the colliding particle 
+    Particle p1 = m_partList[index];
+    // poping all its collisions from the list 
+    // updating its speed 
+    // updating its next collisions 
+    for (size_t jPart = 0 ; jPart < m_partList.size() ; jPart++) 
+    {
+        Particle p2 = m_partList[jPart];
+        if (p1.index() != p2.index())
+        {
+            double collTime = p1.iWillCollide(p2);
+            if (collTime > 0) m_CollisionList.addCollision(collTime, p1.index(), p2.index());
+        }
+    }
+    return true;
+}
+
+bool DynamicsManager::updateSpeedFromCollision(Particle& p1, Particle& p2) 
+{
+    // head-on collision 
+    if (p1.u()*p2.u() == -1)
+    {
+        double u(0);
+        double v(0);
+        
+        if (p1.u() == 1)
+        {
+            u = 0; v = 1;
+        }else if (p1.v() == 1)
+        {
+            u = -1; v = 0;
+        }else if (p1.u() == -1)
+        {
+            u = 0; v = -1;
+        }else //(p1.v() == -1)
+        {
+            u = 1; v = 0;
+        }
+        p1.setSpeed(u, v);
+
+
+        if (p2.u() == 1)
+        {
+            u = 0; v = 1;
+        }else if (p2.v() == 1)
+        {
+            u = -1; v = 0;
+        }else if (p2.u() == -1)
+        {
+            u = 0; v = -1;
+        }else //(p2.v() == -1)
+        {
+            u = 1; v = 0;
+        }
+        p2.setSpeed(u, v);
+    }
+    // side-to-side collision 
+    else if (p1.u()*p2.v() !=0 || p1.v()*p2.u() != 0)
+    {
+        double u = p1.u();
+        double v = p1.v();
+        p1.setSpeed(p2.u(), p2.v());
+        p2.setSpeed(u, v);
+    }
     return true;
 }
 

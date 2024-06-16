@@ -111,30 +111,18 @@ bool Particle::computeTimeBeforeNextWall()
  */
 double Particle::iWillCollide(Particle other) 
 {
-    cout << "Looking for collision between " << m_index << " and " << other.index() << endl;
-    // making sure they are not the same particle
-    if (other.index() == m_index)
+    if (other.index() == m_index) // making sure they are not the same particle
         return -1;
 
     // head-on collisions
     if ((abs(m_y-other.y()) < m_eps) && m_u*other.u() < 0)
     {// particles are moving on the same horizontal line with inverted speeds
-        if ((other.x()-m_x)*m_u > 0)
-        {// they are getting closer 
-            cout << "horizontal head-on collision" << endl; 
-            return abs(other.x()-m_x);// /!\ true if v1=v2=1 
-        }
-        // else
-        //     cout << "(other.x()-m_x)*m_u == " << other.x() << " - " << m_x << " * " << m_u << (other.x()-m_x)*m_u << endl;
+        if ((other.x()-m_x)*m_u > 0) return abs(other.x()-m_x); // they are getting closer : horizontal head-on collision /!\ true if v1=v2=1 
         return -1;
     }
     if ((abs(m_x-other.x()) < m_eps) && m_v*other.v() < 0)
     {// particles are moving on the same vertical line with inverted speeds
-        if ((other.y()-m_y)*m_v > 0)
-        {// they are getting closer 
-            cout << "vertical head-on collision" << endl; 
-            return abs(other.y()-m_y);// /!\ true if v1=v2=1 
-        }
+        if ((other.y()-m_y)*m_v > 0) return abs(other.y()-m_y);// they are getting closer : vertical head-on collision   /!\ true if v1=v2=1 
         return -1;
     }
 
@@ -142,28 +130,15 @@ double Particle::iWillCollide(Particle other)
     if ((m_u*other.v() !=0) || m_v*other.u() !=0)
     {
         if (m_u != 0)
-        {
-            if (abs((other.x() - m_x)/sign(m_u) - (m_y - other.y())/sign(other.v())) < m_eps)
-            {// archi élégant ! ya puka prier pour que ça marche. 
-                cout << "A side-to-side collision" << endl; 
-                return abs(m_x-other.x());// /!\ true if v1=v2=1 
-            }
-        }
+            if (abs((other.x() - m_x)/sign(m_u) - (m_y - other.y())/sign(other.v())) < m_eps) return abs(m_x-other.x()); //A side-to-side collision
         else if (m_v != 0)
-        {
-            if (abs((other.y() - m_y)/sign(m_v) - (m_x - other.x())/sign(other.u())) < m_eps)
-            {
-                cout << "B side-to-side collision" << endl; 
-                return abs(m_y-other.y());// /!\ true if v1=v2=1 
-            }
-        }
+            if (abs((other.y() - m_y)/sign(m_v) - (m_x - other.x())/sign(other.u())) < m_eps) return abs(m_y-other.y()); // B side-to-side collision
         else 
         {
             cout << "Hum, not sure I'm supposed to get here... " << endl;
             return -1;
         }
     }
-    
     return -1;
 }
 
@@ -177,25 +152,6 @@ std::ostream& operator<<(std::ostream& os, const Particle& particle) {
     return os;
 }
 
-bool collide(Particle& p1, Particle& p2) 
-{
-    if (p1.u()*p2.u() == -1)
-    {
-        // A FAIRE !!!!! 
-        double u = p1.u();
-        double v = p1.v();
-        p1.setSpeed(p2.u(), p2.v());
-        p2.setSpeed(u, v);
-    }
-    else if (p1.u()*p2.v() !=0 || p1.v()*p2.u() != 0)
-    {
-        double u = p1.u();
-        double v = p1.v();
-        p1.setSpeed(p2.u(), p2.v());
-        p2.setSpeed(u, v);
-    }
-    return true;
-}
 
 
 

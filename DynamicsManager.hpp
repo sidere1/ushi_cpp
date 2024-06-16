@@ -32,6 +32,10 @@ public:
     bool move(double dt);
     bool updateTraj();
     bool collide();
+    bool wallCollide(size_t index);
+    bool updateSpeedFromCollision(Particle& p1, Particle& p2);
+
+    en fait faut jamais créer de nouvelle Particle  part  l'initialisation, toujours les manier par adresse 
 
 protected: 
     size_t m_n;
