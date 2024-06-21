@@ -6,6 +6,7 @@ creates a LatexFile class.
 #define WHEREAMI cout << endl << "no crash until line " << __LINE__ << " in the file " __FILE__ << endl << endl;
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <cassert>
 #include "BCMatrix.hpp"
@@ -38,7 +39,7 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option){return
 int main()
 {
     size_t N;
-    N = 10;
+    N = 400;
     // BCMatrix m(N);
     // m.setTrackedPart(0);
     // m.setTrackedPart(1);
@@ -65,11 +66,13 @@ int main()
     // l.addCollision(23.25, 1, 8);
     // l.printList(); 
     // l.removeColsFromNextCollidingParts();
+    // l.removeColsFromPart(1);
     // l.printList(); 
 
 
     DynamicsManager d(N);
-    
+    d.run();
+
     
 
     return 0;

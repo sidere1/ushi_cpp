@@ -7,7 +7,7 @@ OBJECTS := $(patsubst %.cpp,%.o,$(SOURCES))
 DEPENDS := $(patsubst %.cpp,%.d,$(SOURCES))
 
 ifeq ($(UNAME), Darwin)
-CXXFLAGS := -std=c++14 -g 
+CXXFLAGS := -std=c++17 -g 
 LIBS = -I/opt/homebrew/Cellar/boost/1.82.0_1/include/ -I/Users/silouane/Documents/code/libs/boost/1.72.0 -I/opt/homebrew/Cellar/eigen/3.4.0_1/lib/ 
 LINKS = -I/opt/homebrew/include -L/opt/homebrew/lib -lboost_filesystem
 endif
@@ -28,7 +28,8 @@ WARNING := -Wall -Wextra -pedantic
 
 all: prog
 ifeq ($(UNAME), Darwin)
-	gtime -v ./prog
+	# gtime -v ./prog
+	time ./prog
 endif
 ifeq ($(UNAME), Linux)
 	/usr/bin/time -v ./prog 

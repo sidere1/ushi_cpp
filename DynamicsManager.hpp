@@ -30,12 +30,13 @@ public:
     bool run();
     bool initializeCL();
     bool move(double dt);
-    bool updateTraj();
+    bool updateTraj(size_t index);
     bool collide();
     bool wallCollide(size_t index);
-    bool updateSpeedFromCollision(Particle& p1, Particle& p2);
+    bool updateSpeedFromCollision(size_t p1, size_t p2);
+    bool computeNextWallImpact();
 
-    en fait faut jamais créer de nouvelle Particle  part  l'initialisation, toujours les manier par adresse 
+    // en fait faut jamais créer de nouvelle Particle  part  l'initialisation, toujours les manier par adresse 
 
 protected: 
     size_t m_n;
@@ -46,6 +47,8 @@ protected:
     double m_arenaSize;
     double m_eps;
     double m_time;
+    size_t m_nextWallImpactPart;
+    double m_nextWallImpactTime;
     // Particle[]
     // std::map<double, std::pair<size_t, size_t>> m_list;
 };
