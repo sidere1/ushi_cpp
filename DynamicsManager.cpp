@@ -15,26 +15,34 @@ using namespace std;
 // * 
 // * 
 
-DynamicsManager::DynamicsManager(size_t N):m_n(N), m_BCMatrix(BCMatrix(N)),m_CollisionList(CollisionList(N))
+DynamicsManager::DynamicsManager(size_t N, bool verbose, bool export_anim):m_n(N), m_BCMatrix(BCMatrix(N)),m_CollisionList(CollisionList(N, verbose)),m_CollisionSummary(CollisionList(N, verbose, "collisionsummary.ushi")), m_verbose(verbose), m_exportAnim(export_anim)
 {
     // initializing basic stuff 
+    m_rememberSummary = true; 
     m_endTime = 100;
     m_arenaSize = 1;
+    // m_verbose = true;
+    // m_exportAnim = true;
+    m_export_file = "summary.ushi";
     double alpha = 1; //  N controls the number of particles, alpha their size and hence the frequency of collisions. For alpha=1, we are in the kinetic regime (Boltzmann) For alpha>>1, we are in the diffusive regime.
     if (m_n > 100)
         m_eps = alpha/m_n;
     else 
-        m_eps = 0.1/m_n;
+        m_eps = alpha/m_n;
+        // m_eps = 0.1/m_n;
     cout << "m_eps = " <<    m_eps << endl; 
     m_time = 0;
     m_nextWallImpactTime = 1000000;
     // generatePartListDebug();
     cout << "generating part list" << endl;
     generatePartList();
-    // printPartList();
     cout << "initializing collision list" << endl;
     initializeCL();
-    // m_CollisionList.printList();    
+    // if (m_verbose)
+        // printPartList();
+        // m_CollisionList.printList();    
+    if (m_exportAnim)
+            initialize_anim_file();
 }
 
 bool DynamicsManager::generatePartList()
@@ -91,9 +99,6 @@ bool DynamicsManager::generatePartList()
 
 bool DynamicsManager::generatePartListDebug()
 {
-    // Particle p1 = Particle(1, 0.1, 0, 0, -1, m_eps, m_arenaSize);
-    // Particle p2 = Particle(2, 0, -10, 0, -1, m_eps, m_arenaSize);
-
     Particle p1 = Particle(0, -0.1, 0, 0, 1, m_eps, m_arenaSize);
     Particle p2 = Particle(1, -0.2, 0.1, 1, 0, m_eps, m_arenaSize);
     m_partList.push_back(p1);
@@ -125,9 +130,15 @@ bool DynamicsManager::run()
     m_CollisionList.printList();
     while (m_time < m_endTime)
     {
-        if(debugStop++ > 1000)
+        // if(debugStop++ > 1000)
+        if(debugStop++ < 0)
         {
             cout << "stopping on debug criterion" << endl;
+            if (m_verbose)
+            {
+                m_CollisionList.printList();
+                cout << collisionCount << " collisions happened during the run, and " << wallCount << " wall impacts." << endl;
+            }
             return true;
         }
 
@@ -141,12 +152,14 @@ bool DynamicsManager::run()
         }
         double dt = nextColTime - m_time;
         computeNextWallImpact();
-        // debug prints 
-        std::pair<size_t, size_t> pair = m_CollisionList.nextColParts();
-        size_t p1 = m_partList[pair.first].index(); 
-        size_t p2 = m_partList[pair.second].index();  
-        cout << "next collision between " << p1 << " and " << p2 << " in " << dt << " (at t = " << nextColTime << ") ; next wall impact in " << m_nextWallImpactTime << endl;
-        // end of debug prints 
+        
+        if (m_verbose)
+        {
+            std::pair<size_t, size_t> pair = m_CollisionList.nextColParts();
+            size_t p1 = m_partList[pair.first].index(); 
+            size_t p2 = m_partList[pair.second].index();  
+            cout << "next collision between " << p1 << " and " << p2 << " in " << dt << " (at t = " << nextColTime << ") ; next wall impact in " << m_nextWallImpactTime << endl;
+        }
 
         if (m_nextWallImpactTime < dt || nextColTime < 0)
         {
@@ -158,13 +171,12 @@ bool DynamicsManager::run()
                 return false;
             }
             m_time += m_nextWallImpactTime;
-            cout << "Time = " << m_time << " : wall collision for particle " << m_nextWallImpactPart << endl;
+            if (m_verbose)
+                cout << "Time = " << m_time << " : wall collision for particle " << m_nextWallImpactPart << endl;
             if (!move(m_nextWallImpactTime))
                 return false; 
             if (!wallCollide(m_nextWallImpactPart))
                 return false; 
-            // if (!updateTraj(m_nextWallImpactPart)) 
-            //     return false;
             wallCount++;
         }
         else if (dt >= 0)
@@ -173,13 +185,12 @@ bool DynamicsManager::run()
             std::pair<size_t, size_t> pair = m_CollisionList.nextColParts();
             size_t p1 = m_partList[pair.first].index(); 
             size_t p2 = m_partList[pair.second].index();  
-            cout << "Time = " << m_time << " : collision between " << p1 << " and " << p2 << endl;
+            if (m_verbose)
+                cout << "Time = " << m_time << " : collision between " << p1 << " and " << p2 << endl;
             if (!move(dt))
                 return false; 
             if (!collide())
                 return false; 
-            // if (!(updateTraj(p1) || updateTraj(p2)))
-            //     return false; 
             collisionCount++;
         }
         else 
@@ -189,11 +200,18 @@ bool DynamicsManager::run()
             printPartList();
             return false; 
         }
-        // printPartList();
-        m_CollisionList.printList(3);
+        if (m_exportAnim)
+            add_anim_step();
+        if (m_verbose)
+            m_CollisionList.printList(3);
     }
-    m_CollisionList.printList();
+    if (m_verbose)
+    {
+        m_CollisionList.printList();
+    }
+    cout << "Reached t = " << m_time << endl;
     cout << collisionCount << " collisions happened during the run, and " << wallCount << " wall impacts." << endl;
+
     return true;
 }
 
@@ -208,7 +226,7 @@ bool DynamicsManager::initializeCL()
             if (p1.index() != p2.index())
             {
                 double collTime = p1.iWillCollide(p2);
-                if (collTime > 0) m_CollisionList.addCollision(collTime, p1.index(), p2.index());
+                if (collTime > 0) m_CollisionList.addCollision(collTime, p1.index(), p2.index()); // collTime is a duration and not a time, but m_time == 0 so 
             }
         }
     }
@@ -217,14 +235,15 @@ bool DynamicsManager::initializeCL()
 
 bool DynamicsManager::move(double dt)
 {
+    #pragma omp parallel for 
     for (Particle& particle : m_partList) {
         particle.move(dt);
     }
     return true;
 }
+
 bool DynamicsManager::updateTraj(size_t index)
 {
-    // m_CollisionList.removeColsFromNextCollidingParts(); // déjà fait dans collide 
     for (size_t iPart = 0 ; iPart < m_partList.size() ; iPart++) 
     {
         size_t p2 = iPart;
@@ -234,7 +253,6 @@ bool DynamicsManager::updateTraj(size_t index)
     }
     return true;
 }
-
 
 bool DynamicsManager::collide()
 {
@@ -249,9 +267,11 @@ bool DynamicsManager::collide()
     m_CollisionList.removeColsFromPart(p2);
 
     // updating their speed 
-    cout << "Before collision, (u1, v1) = (" << m_partList[p1].u() << "," << m_partList[p1].v() << ") ; (u2, v2) = (" << m_partList[p2].u() << "," << m_partList[p2].v() << ") " << endl;
+    if (m_verbose)
+        cout << "Before collision, (u1, v1) = (" << m_partList[p1].u() << "," << m_partList[p1].v() << ") ; (u2, v2) = (" << m_partList[p2].u() << "," << m_partList[p2].v() << ") " << endl;
     updateSpeedFromCollision(p1, p2);
-    cout << "After collision, (u1, v1) = (" << m_partList[p1].u() << "," << m_partList[p1].v() << ") ; (u2, v2) = (" << m_partList[p2].u() << "," << m_partList[p2].v() << ") " << endl;
+    if (m_verbose)
+        cout << "After collision, (u1, v1) = (" << m_partList[p1].u() << "," << m_partList[p1].v() << ") ; (u2, v2) = (" << m_partList[p2].u() << "," << m_partList[p2].v() << ") " << endl;
 
     // updating their time before wall impact
     m_partList[p1].computeTimeBeforeNextWall(); 
@@ -268,7 +288,7 @@ bool DynamicsManager::collide()
             {
                 m_CollisionList.addCollision(collTime+m_time, p1, p3);
                 if (p2 == p3)
-                    cout << "AAAAAAAAAAA " << endl << " strange ! I added the same collision as the one that juste happened " << endl;
+                    cout << endl << endl << "This is vraisemblablement une erreur ! I added the same collision as the one that just happened " << endl;
             }
         }
         if (p2 != p3)
@@ -278,9 +298,15 @@ bool DynamicsManager::collide()
             {
                 m_CollisionList.addCollision(collTime+m_time, p2, p3);
                 if (p1 == p3)
-                    cout << "AAAAAAAAAAA " << endl << " strange ! I added the same collision as the one that juste happened " << endl;
+                    cout << endl << endl << "This is vraisemblablement une erreur ! I added the same collision as the one that just happened " << endl;
             }
         }
+    }
+
+    // updating m_CollisionSummary
+    if (m_rememberSummary)
+    {
+        m_CollisionSummary.addCollision(m_time, p1, p2);
     }
     return true;
 }
@@ -303,7 +329,7 @@ bool DynamicsManager::wallCollide(size_t index)
         if (index != p2)
         {
             double collTime = m_partList[index].iWillCollide(m_partList[p2]);
-            if (collTime > 0) m_CollisionList.addCollision(collTime, index, m_partList[p2].index());
+            if (collTime > 0) m_CollisionList.addCollision(collTime + m_time, index, m_partList[p2].index());
         }
     }
     return true;
@@ -315,13 +341,15 @@ bool DynamicsManager::updateSpeedFromCollision(size_t p1, size_t p2)
     if (m_partList[p1].u()*m_partList[p2].u() == -1 || m_partList[p1].v()*m_partList[p2].v() == -1)
     {
         m_partList[p1].headOnCollide(m_partList[p2]);
-        cout << "Head-on collision" << endl;
+        if (m_verbose)
+            cout << "Head-on collision" << endl;
     }
     // side-to-side collision 
     else if (m_partList[p1].u()*m_partList[p2].v() !=0 || m_partList[p1].v()*m_partList[p2].u() != 0)
     {
         m_partList[p1].sideToSideCollide(m_partList[p2]);
-        cout << "Side-to-side collision" << endl;
+        if (m_verbose)
+            cout << "Side-to-side collision" << endl;
     }
     else
     {
@@ -348,3 +376,31 @@ bool DynamicsManager::computeNextWallImpact()
     return true;
 }
 
+bool DynamicsManager::initialize_anim_file()
+{
+    ofstream outfile(m_export_file.c_str());
+    if (!outfile)
+        return false;
+
+    outfile << "---------------------- " << endl;
+    outfile << "---- Ushi summary file " << endl;
+    outfile << "---------------------- " << endl;
+    outfile << "---- bla bla truc truc " << endl;
+    outfile << "---------------------- " << endl;
+    outfile << "nb_particles = " << m_n << " ; eps = " << m_eps << " ; endtime = " << m_endTime << endl;
+    return true; 
+}
+
+bool DynamicsManager::add_anim_step()
+{
+    ofstream outfile(m_export_file.c_str(), ios::app);
+    if (!outfile)
+        return false;
+
+    outfile << endl << m_time << endl;
+    for (size_t iPart = 0; iPart < m_partList.size(); ++iPart)
+    {
+        outfile << m_partList[iPart] << endl;;
+    }
+    return true; 
+}

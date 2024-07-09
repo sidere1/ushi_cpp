@@ -3,3 +3,10 @@ output/
 *.d
 *.o
 prog
+*.ushi
+post_process/__pycache__/
+post_process/*.mp4
+
+
+
+

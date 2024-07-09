@@ -23,7 +23,7 @@ DynamicsManager class
 class DynamicsManager 
 {
 public:
-    DynamicsManager(size_t N);
+    DynamicsManager(size_t N, bool verbose, bool m_exportAnim);
     bool generatePartList();
     bool generatePartListDebug();
     bool printPartList();
@@ -35,6 +35,8 @@ public:
     bool wallCollide(size_t index);
     bool updateSpeedFromCollision(size_t p1, size_t p2);
     bool computeNextWallImpact();
+    bool initialize_anim_file();
+    bool add_anim_step();
 
     // en fait faut jamais créer de nouvelle Particle  part  l'initialisation, toujours les manier par adresse 
 
@@ -42,6 +44,7 @@ protected:
     size_t m_n;
     BCMatrix m_BCMatrix;
     CollisionList m_CollisionList;
+    CollisionList m_CollisionSummary;
     double m_endTime;
     std::vector<Particle> m_partList;
     double m_arenaSize;
@@ -49,6 +52,8 @@ protected:
     double m_time;
     size_t m_nextWallImpactPart;
     double m_nextWallImpactTime;
+    bool m_verbose, m_exportAnim, m_rememberSummary;
+    std::string m_export_file;
     // Particle[]
     // std::map<double, std::pair<size_t, size_t>> m_list;
 };

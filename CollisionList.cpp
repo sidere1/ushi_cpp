@@ -9,8 +9,18 @@ using namespace std;
 #define WHEREAMI cout << endl << "no crash until line " << __LINE__ << " in the file " __FILE__ << endl << endl;
 
 
-CollisionList::CollisionList(size_t N):m_n(N)
+CollisionList::CollisionList(size_t N, bool verbose):m_n(N), m_verbose(verbose), m_flush(false)
 {
+    m_maxSize = 100000000;
+    m_hasFlushed = false;
+}
+
+CollisionList::CollisionList(size_t N, bool verbose, string flushFile):m_n(N), m_verbose(verbose), m_flush(true), m_flushFile(flushFile)
+{
+    // m_maxSize = 100000000;
+    m_maxSize = 10;
+    ofstream outfile(m_flushFile);
+    m_hasFlushed = false;
 }
 
 bool CollisionList::addCollision(double t, size_t i, size_t j) 
@@ -18,7 +28,10 @@ bool CollisionList::addCollision(double t, size_t i, size_t j)
     if (i > m_n) cout << "you asked for particle " << i << " which does not exist" << endl;
     if (j > m_n) cout << "you asked for particle " << j << " which does not exist" << endl;
     m_list[t] = std::make_pair(i, j);
-    // cout << " adding collision at time " << t << " between " << i << " and " << j << "." << endl;
+    
+    if (m_flush)
+        if (m_list.size() > m_maxSize)
+            return flush();
     return true;
 }
 
@@ -67,26 +80,6 @@ std::pair<size_t, size_t> CollisionList::nextColParts()
     return it->second;
 }
 
-// bool CollisionList::removeColsFromNextCollidingParts()
-// {
-//     if (m_list.size() == 0)
-//         return false;
-//     std::pair<size_t, size_t> beginning = nextColParts();
-//     size_t part1 = beginning.first;
-//     size_t part2 = beginning.second;
-//     for (auto it = m_list.begin(); it != m_list.end(); ) 
-//     {
-//         if (it->second.first == part1 || it->second.second == part1 || it->second.first == part2 || it->second.second == part2 ) {
-//             it = m_list.erase(it); // erase renvoie l'itérateur suivant
-//         } 
-//         else 
-//         {
-//             ++it;
-//         }
-//     }
-//     return true; 
-// }
-
 bool CollisionList::removeColsFromPart(size_t index)
 {
     if (m_list.size() == 0)
@@ -94,7 +87,8 @@ bool CollisionList::removeColsFromPart(size_t index)
     for (auto it = m_list.begin(); it != m_list.end(); ) 
     {
         if (it->second.first == index || it->second.second == index) {
-            cout << "Removing collision at time " << it->first << " between " << it->second.first  << " and " << it->second.second << endl;
+            if (m_verbose)
+                cout << "Removing collision at time " << it->first << " between " << it->second.first  << " and " << it->second.second << endl;
             it = m_list.erase(it); // erase renvoie l'itérateur suivant
         } 
         else 
@@ -108,4 +102,21 @@ bool CollisionList::removeColsFromPart(size_t index)
 size_t CollisionList::size()
 {
     return m_list.size();
+}
+
+bool CollisionList::flush()
+{
+    ofstream outfile(m_flushFile, ios::app);
+    if (!outfile)
+        return false; 
+    
+    for (const auto& [key, value] : m_list) {
+        outfile << std::setw(6) << key << std::setw(5) << value.first << std::setw(5) << value.second << std::endl;
+    }
+    for (auto it = m_list.begin(); it != m_list.end(); ) 
+    {
+        it = m_list.erase(it); // erase renvoie l'itérateur suivant
+    }
+    m_hasFlushed = true;
+    return true;
 }

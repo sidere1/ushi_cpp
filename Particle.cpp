@@ -118,12 +118,10 @@ bool Particle::wallCollide()
         if (m_y > 0)
         { // next wall is quadran 1
             m_v = -1;
-            // cout << "going south" << endl;
         } 
         else 
         {// next wall is quadran 4
             m_v = 1;
-            // cout << "going north" << endl;
         }
     }
     else if (m_u < 0) 
@@ -132,12 +130,10 @@ bool Particle::wallCollide()
         if (m_y > 0)
         { // next wall is quadran 2
             m_v = -1;
-            // cout << "going south" << endl;
         } 
         else 
         {// next wall is quadran 3
             m_v = 1;
-            // cout << "going north" << endl;
         }
     }
     else if (m_v > 0) 
@@ -146,12 +142,10 @@ bool Particle::wallCollide()
         if (m_x > 0)
         { // next wall is quadran 1
             m_u = -1;
-            // cout << "going to the west" << endl;
         } 
         else 
         {// next wall is quadran 2
             m_u = 1;
-            // cout << "going to the east" << endl;
         }
     }
     else if (m_v < 0) 
@@ -159,13 +153,11 @@ bool Particle::wallCollide()
         m_v = 0;
         if (m_x > 0)
         { // next wall is quadran 4
-            // cout << "going to the west" << endl;
             m_u = -1;
         } 
         else 
         {// next wall is quadran 3
             m_u = 1;
-            // cout << "going to the east" << endl;
         }
     }
     else 
@@ -201,18 +193,11 @@ double Particle::iWillCollide(Particle other)
     // side-to-side collisions 
     if ((m_u*other.v() !=0) || m_v*other.u() !=0)
     {
-        if (m_u != 0)
+        if (abs(other.x() - m_x) == abs(other.y() - m_y))
         {
-            if (abs((other.x() - m_x)/sign(m_u) - (m_y - other.y())/sign(other.v())) < m_eps) return abs(m_x-other.x())-m_eps; //A side-to-side collision
-        }
-        else if (m_v != 0)
-        {
-            if (abs((other.y() - m_y)/sign(m_v) - (m_x - other.x())/sign(other.u())) < m_eps) return abs(m_y-other.y())-m_eps; // B side-to-side collision
-        }
-        else 
-        {
-            cout << "Hum, not sure I'm supposed to get here... " << endl;
-            return -1;
+            double dt = abs(m_x-other.x());
+            if ((abs((m_x + m_u*dt) - (other.x()+other.u()*dt)) < m_eps) && (abs((m_y += m_v*dt) - (other.y()+other.v()*dt)) < m_eps)) 
+                return dt-m_eps; //A side-to-side collision
         }
     }
     return -1;
