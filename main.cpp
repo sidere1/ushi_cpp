@@ -9,7 +9,7 @@ creates a LatexFile class.
 #include <iomanip>
 #include <string>
 #include <cassert>
-#include "BCMatrix.hpp"
+// #include "BCMatrix.hpp"
 #include "CollisionList.hpp"
 #include "DynamicsManager.hpp"
 #include "Particle.hpp"
@@ -39,13 +39,10 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option){return
 int main()
 {
     size_t N;
-    N = 1000;
+    N = 3000;
     bool verbose = false; 
     bool export_anim = false; 
     DynamicsManager d(N, verbose, export_anim);
     d.run();
-
-    
-
     return 0;
 }

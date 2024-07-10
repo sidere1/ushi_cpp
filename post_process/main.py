@@ -86,15 +86,6 @@ def animate_points(positions, time, output_file='animation.mp4'):
     plt.close(fig)
     
     
-# Example usage:
-# positions = [np.random.rand(10, 2) for _ in range(100)]  # Replace with your data
-# time = np.linspace(0, 10, 100)  # Replace with your data
-# plot_points(positions, time, 0)  # Plot points at the first instant
-# animate_points(positions, time)  # Create an animation
-
-
-
-
 
 
 f = open("../summary.ushi", "r")
@@ -140,8 +131,8 @@ while len(line) != 0:
 
 
 n_time = len(time)
-n_time = 100
-positions = positions[0:100]
+#n_time = 100
+#positions = positions[0:100]
 
 point_size = epsilon 
 animate_points(positions, time)

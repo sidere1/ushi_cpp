@@ -29,6 +29,11 @@ public:
     bool removeColsFromPart(size_t index);
     size_t size();
     bool flush();
+    bool unflush();
+    bool hasFlushed() {return m_hasFlushed;};
+
+    std::map<double, std::pair<size_t, size_t>> list() {return m_list;};
+    
 protected: 
     size_t m_n;
     std::map<double, std::pair<size_t, size_t>> m_list;

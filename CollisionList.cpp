@@ -17,8 +17,8 @@ CollisionList::CollisionList(size_t N, bool verbose):m_n(N), m_verbose(verbose),
 
 CollisionList::CollisionList(size_t N, bool verbose, string flushFile):m_n(N), m_verbose(verbose), m_flush(true), m_flushFile(flushFile)
 {
-    // m_maxSize = 100000000;
-    m_maxSize = 10;
+    m_maxSize = 100000000;
+    // m_maxSize = 10;
     ofstream outfile(m_flushFile);
     m_hasFlushed = false;
 }
@@ -28,7 +28,8 @@ bool CollisionList::addCollision(double t, size_t i, size_t j)
     if (i > m_n) cout << "you asked for particle " << i << " which does not exist" << endl;
     if (j > m_n) cout << "you asked for particle " << j << " which does not exist" << endl;
     m_list[t] = std::make_pair(i, j);
-    
+    if (m_verbose)
+        cout << "Adding collision at time " << t << " between " << i << " and " << j << endl;
     if (m_flush)
         if (m_list.size() > m_maxSize)
             return flush();
@@ -38,11 +39,11 @@ bool CollisionList::addCollision(double t, size_t i, size_t j)
 bool CollisionList::printList() 
 {
     cout << "--------------------------------" << endl;
-    cout << "Collision list " << endl;
+    cout << "Collision list ("  << m_list.size() << " entries)" << endl;
     cout << "  Time    i    j" << endl;
     cout << "--------------------------------" << endl;
     for (const auto& [key, value] : m_list) {
-        std::cout << std::setw(6) << key << std::setw(5) << value.first << std::setw(5) << value.second << std::endl;
+        std::cout << std::setw(10) << key << std::setw(5) << value.first << std::setw(5) << value.second << std::endl;
     }
     cout << "--------------------------------" << endl << endl;
     return true;
@@ -51,7 +52,7 @@ bool CollisionList::printList()
 bool CollisionList::printList(size_t head) 
 {
     cout << "--------------------------------" << endl;
-    cout << "Collision list " << endl;
+    cout << "Collision list ("  << m_list.size() << " entries)" << endl;
     cout << "  Time    i    j" << endl;
     cout << "--------------------------------" << endl;
     size_t count = 0;
@@ -118,5 +119,20 @@ bool CollisionList::flush()
         it = m_list.erase(it); // erase renvoie l'itérateur suivant
     }
     m_hasFlushed = true;
+    return true;
+}
+
+bool CollisionList::unflush()
+{
+    flush();
+    ifstream infile(m_flushFile);
+    if (!infile)
+        return false; 
+    
+    // string temp;
+    // while (infile >> temp)
+    // {};
+    
+    m_hasFlushed = false;
     return true;
 }

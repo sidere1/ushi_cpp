@@ -14,6 +14,7 @@ DynamicsManager class
 // #include <iomanip> // pour std::put_time
 #include "BCMatrix.hpp"
 #include "CollisionList.hpp"
+#include "BackwardCluster.hpp"
 #include "Particle.hpp"
 #include <array>
 
@@ -38,14 +39,12 @@ public:
     bool initialize_anim_file();
     bool add_anim_step();
 
-    // en fait faut jamais créer de nouvelle Particle  part  l'initialisation, toujours les manier par adresse 
-
 protected: 
     size_t m_n;
     BCMatrix m_BCMatrix;
     CollisionList m_CollisionList;
     CollisionList m_CollisionSummary;
-    double m_endTime;
+    double m_endTime, m_dt;
     std::vector<Particle> m_partList;
     double m_arenaSize;
     double m_eps;
@@ -54,6 +53,7 @@ protected:
     double m_nextWallImpactTime;
     bool m_verbose, m_exportAnim, m_rememberSummary;
     std::string m_export_file;
+    BackwardCluster m_bc;
     // Particle[]
     // std::map<double, std::pair<size_t, size_t>> m_list;
 };
