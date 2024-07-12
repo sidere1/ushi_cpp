@@ -20,7 +20,7 @@ BackwardCluster class
 class BackwardCluster
 {
 public:
-    BackwardCluster(size_t N, bool verbose);
+    BackwardCluster(size_t N, bool verbose, std::string resultDir);
     bool printBC(size_t nPart = 5, size_t nClu = 10);
     bool buildFromList(CollisionList cl, double t0, double t1);
     void checkPartInBC(size_t i, size_t p1, size_t p2, std::mt19937 &gen);
@@ -36,9 +36,8 @@ protected:
     size_t m_n;
     std::vector<std::map<size_t, size_t>> m_bc;
     bool m_verbose, m_fullFiles;
-    std::string m_cardFile, m_rintFile, m_rextFile;
+    std::string m_cardFile, m_rintFile, m_rextFile, m_resultDir;
 };
-
 
 
 #endif

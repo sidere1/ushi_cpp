@@ -18,13 +18,11 @@ DynamicsManager class
 #include "Particle.hpp"
 #include <array>
 
-// using TimePoint = std::chrono::system_clock::time_point;
-
 
 class DynamicsManager 
 {
 public:
-    DynamicsManager(size_t N, bool verbose, bool m_exportAnim);
+    DynamicsManager(size_t N, double alpha, bool verbose, bool exportAnim, std::string resultDir, bool inTore, bool computeBC, double dtExport, double endTime, bool rememberSummary, double arenaSize);
     bool generatePartList();
     bool generatePartListDebug();
     bool printPartList();
@@ -34,6 +32,7 @@ public:
     bool updateTraj(size_t index);
     bool collide();
     bool wallCollide(size_t index);
+    bool teleport(size_t index);
     bool updateSpeedFromCollision(size_t p1, size_t p2);
     bool computeNextWallImpact();
     bool initialize_anim_file();
@@ -41,25 +40,27 @@ public:
 
 protected: 
     size_t m_n;
+    double m_alpha;
+    bool m_verbose;
+    bool m_exportAnim;
     BCMatrix m_BCMatrix;
     CollisionList m_CollisionList;
     CollisionList m_CollisionSummary;
-    double m_endTime, m_dt;
+    double m_endTime;
     std::vector<Particle> m_partList;
     double m_arenaSize;
     double m_eps;
     double m_time;
     size_t m_nextWallImpactPart;
     double m_nextWallImpactTime;
-    bool m_verbose, m_exportAnim, m_rememberSummary;
+    bool m_rememberSummary;
     std::string m_export_file;
     BackwardCluster m_bc;
-    // Particle[]
-    // std::map<double, std::pair<size_t, size_t>> m_list;
+    std::string m_resultDir;
+    bool m_inTore, m_computeBC;
+    double m_dtExport;
 };
 
 
-
 #endif
-
 

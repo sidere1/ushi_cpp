@@ -1,0 +1,13 @@
+{
+  "N": 400,
+  "alpha": 1.0,
+  "verbose": false,
+  "exportAnim": false,
+  "resultsDir": "output",
+  "inTore": false,
+  "computeBC": true,
+  "dtExport": 0.1,
+  "m_endTime": 2.0,
+  "m_rememberSummary": false,
+  "m_arenaSize": 1.0
+}

@@ -20,7 +20,7 @@ class CollisionList
 {
 public:
     CollisionList(size_t N, bool verbose);
-    CollisionList(size_t N, bool verbose, std::string flushFile);
+    CollisionList(size_t N, bool verbose, std::string resultDir);
     bool printList();
     bool printList(size_t head);
     bool addCollision(double t, size_t i, size_t j);
@@ -40,7 +40,7 @@ protected:
     bool m_verbose;
     bool m_flush;
     bool m_hasFlushed;
-    std::string m_flushFile;
+    std::string m_resultDir, m_flushFile;
     size_t m_maxSize;
 };
 

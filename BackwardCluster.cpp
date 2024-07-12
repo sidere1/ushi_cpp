@@ -9,13 +9,13 @@ using namespace std;
 #define WHEREAMI cout << endl << "no crash until line " << __LINE__ << " in the file " __FILE__ << endl << endl;
 
 
-BackwardCluster::BackwardCluster(size_t N, bool verbose):m_n(N), m_verbose(verbose)
+BackwardCluster::BackwardCluster(size_t N, bool verbose, string resultDir):m_n(N), m_verbose(verbose), m_resultDir(resultDir)
 {
     m_bc.resize(m_n);
     
-    m_cardFile = "cardFile.ushi";
-    m_rintFile = "rintFile.ushi";
-    m_rextFile = "rextFile.ushi";
+    m_cardFile = m_resultDir + "/cardFile.ushi";
+    m_rintFile = m_resultDir + "/rintFile.ushi";
+    m_rextFile = m_resultDir + "/rextFile.ushi";
 
     m_fullFiles = false;
 }
@@ -33,6 +33,7 @@ bool BackwardCluster::printBC(size_t nPart, size_t nClu)
             cout << it->first << "(" << it->second << ")" <<" ; ";
         }
     }
+    cout << endl;
     return true; 
 }
 

@@ -15,10 +15,11 @@ CollisionList::CollisionList(size_t N, bool verbose):m_n(N), m_verbose(verbose),
     m_hasFlushed = false;
 }
 
-CollisionList::CollisionList(size_t N, bool verbose, string flushFile):m_n(N), m_verbose(verbose), m_flush(true), m_flushFile(flushFile)
+CollisionList::CollisionList(size_t N, bool verbose, string resultDir):m_n(N), m_verbose(verbose), m_flush(true), m_resultDir(resultDir)
 {
     m_maxSize = 100000000;
     // m_maxSize = 10;
+    m_flushFile = m_resultDir + "/collisionListFlush.ushi";
     ofstream outfile(m_flushFile);
     m_hasFlushed = false;
 }
@@ -129,6 +130,7 @@ bool CollisionList::unflush()
     if (!infile)
         return false; 
     
+    cout << "LA FONCTION UNFLUSH N'A PAS ENCORE ÉTÉ CODÉE" << endl;
     // string temp;
     // while (infile >> temp)
     // {};

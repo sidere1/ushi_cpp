@@ -9,36 +9,42 @@
 using namespace std;
 
 #define WHEREAMI cout << endl << "no crash until line " << __LINE__ << " in the file " __FILE__ << endl << endl;
-// bugs : 
-// * 
-// * 
-// * 
 
-DynamicsManager::DynamicsManager(size_t N, bool verbose, bool export_anim):m_n(N), m_BCMatrix(BCMatrix(N)),m_CollisionList(CollisionList(N, verbose)),m_CollisionSummary(CollisionList(N, verbose, "collisionsummary.ushi")), m_verbose(verbose), m_exportAnim(export_anim), m_bc(BackwardCluster(N, verbose))
+DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool exportAnim, std::string resultDir, bool inTore, bool computeBC, double dtExport, double endTime, bool rememberSummary, double arenaSize):
+    m_n(N),
+    m_alpha(alpha),
+    m_verbose(verbose),
+    m_exportAnim(exportAnim),
+    m_BCMatrix(BCMatrix(N)),
+    m_CollisionList(CollisionList(N, verbose)),
+    m_CollisionSummary(CollisionList(N, verbose, resultDir)),
+    m_endTime(endTime),
+    m_arenaSize(arenaSize),
+    m_eps(m_alpha/m_n),
+    m_time(0),
+    m_nextWallImpactTime(1000000),
+    m_rememberSummary(rememberSummary),
+    m_export_file(resultDir + "/summary.ushi"),
+    m_bc(BackwardCluster(N, verbose, resultDir)),
+    m_resultDir(resultDir),
+    m_inTore(inTore),
+    m_computeBC(computeBC),
+    m_dtExport(dtExport)
 {
-    // initializing basic stuff 
-    m_rememberSummary = true; 
-    m_endTime = 2;
-    m_dt = 0.1;
-    m_arenaSize = 1;
-    m_export_file = "summary.ushi";
-    double alpha = 1; //  N controls the number of particles, alpha their size and hence the frequency of collisions. For alpha=1, we are in the kinetic regime (Boltzmann) For alpha>>1, we are in the diffusive regime.
-    if (m_n > 100)
-        m_eps = alpha/m_n;
-    else 
-        m_eps = alpha/m_n;
-        // m_eps = 0.1/m_n;
-    cout << "m_eps = " <<    m_eps << endl; 
-    m_time = 0;
-    m_nextWallImpactTime = 1000000;
-    // generatePartListDebug();
+    cout << "-------------------------- " << endl;
+    cout << "Beginning ushi computation " << endl;
+    cout << " * m_n = " << m_n << endl << " * m_endTime = " << m_endTime << endl << " * m_arenaSize = " << m_arenaSize << endl << " * m_eps = " << m_eps << endl << " * m_resultDir = " << m_resultDir << endl << " * m_inTore = " << m_inTore << endl << " * m_dtExport = " << m_dtExport << endl;
+    cout << "-------------------------- " << endl << endl;
+    
+    if (m_inTore)
+        cout << "WARNING ! Tore not available yet " << endl;
     cout << "generating part list" << endl;
-    generatePartList();
+    generatePartListDebug();
+    // generatePartList();
     cout << "initializing collision list" << endl;
     initializeCL();
-    // if (m_verbose)
-        // printPartList();
-        // m_CollisionList.printList();    
+    if (m_verbose)
+        printPartList();
     if (m_exportAnim)
             initialize_anim_file();
 }
@@ -49,7 +55,6 @@ bool DynamicsManager::generatePartList()
     std::random_device rd; // Générateur de nombres aléatoires basé sur du matériel (ou pseudo-aléatoire)
     std::mt19937 gen(rd()); // Mersenne Twister RNG initialisé avec le générateur
     std::uniform_real_distribution<> dis_double(0.0000001, 0.999999);
-    // std::uniform_int_distribution<> dis_int(0, 3);
     std::array<int, 3> values = {-1, 0, 1};
     std::uniform_int_distribution<> dis(0, values.size() - 1);
 
@@ -82,11 +87,6 @@ bool DynamicsManager::generatePartList()
                 if (p.isOutsideTheBox()) 
                     intersect = true;
             }
-            // if (intersect)
-            // {
-                // printPartList();
-                // cout << "Rejecting particle " << p << endl;
-            // }
         }
         while(intersect);
         m_partList.push_back(p);
@@ -97,10 +97,28 @@ bool DynamicsManager::generatePartList()
 
 bool DynamicsManager::generatePartListDebug()
 {
-    Particle p1 = Particle(0, -0.1, 0, 0, 1, m_eps, m_arenaSize);
-    Particle p2 = Particle(1, -0.2, 0.1, 1, 0, m_eps, m_arenaSize);
+    m_n = 10;
+    m_eps = m_alpha/m_n;
+    Particle p0 = Particle(0, -0.5, 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p1 = Particle(1, -0.4, 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p2 = Particle(2, -0.3, 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p3 = Particle(3, -0.2, 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p4 = Particle(4, -0.1, 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p5 = Particle(5,  0.1, 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p6 = Particle(6,  0.2, 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p7 = Particle(7,  0.3, 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p8 = Particle(8,  0.4, 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p9 = Particle(9,  0.5, 0.1, 1, 0, m_eps, m_arenaSize);
+    m_partList.push_back(p0);
     m_partList.push_back(p1);
     m_partList.push_back(p2);
+    m_partList.push_back(p3);
+    m_partList.push_back(p4);
+    m_partList.push_back(p5);
+    m_partList.push_back(p6);
+    m_partList.push_back(p7);
+    m_partList.push_back(p8);
+    m_partList.push_back(p9);
     return true;
 }
 
@@ -173,8 +191,11 @@ bool DynamicsManager::run()
                 cout << "Time = " << m_time << " : wall collision for particle " << m_nextWallImpactPart << endl;
             if (!move(m_nextWallImpactTime))
                 return false; 
-            if (!wallCollide(m_nextWallImpactPart))
-                return false; 
+            if (m_inTore)
+                if (!teleport(m_nextWallImpactPart))
+                    return false; 
+                if (!wallCollide(m_nextWallImpactPart))
+                    return false; 
             wallCount++;
         }
         else if (dt >= 0)
@@ -210,12 +231,10 @@ bool DynamicsManager::run()
     cout << "Reached t = " << m_time << endl;
     cout << collisionCount << " collisions happened during the run, and " << wallCount << " wall impacts." << endl;
 
-    // il faudrait relire la liste si elle a déjà été flushée 
     if (m_CollisionSummary.hasFlushed())
         m_CollisionSummary.unflush();
     m_CollisionSummary.printList(10);
-
-    m_bc.computeResults(m_CollisionSummary, m_dt, m_endTime);
+    m_bc.computeResults(m_CollisionSummary, m_dtExport, m_endTime);
     m_bc.printBC(10, 4);
     return true;
 }
@@ -341,6 +360,33 @@ bool DynamicsManager::wallCollide(size_t index)
     return true;
 }
 
+bool DynamicsManager::teleport(size_t index)
+{
+    // in the tore, instead of a collision, we teleport the particle on another side 
+    // poping all its collisions from the list 
+    m_CollisionList.removeColsFromPart(index);
+
+    // updating its speed 
+    m_partList[index].teleport();
+
+    // updating its next collisions 
+    for (size_t jPart = 0 ; jPart < m_partList.size() ; jPart++) 
+    {
+        size_t p2 = jPart;
+        if (index != p2)
+        {
+            double collTime = m_partList[index].iWillCollide(m_partList[p2]);
+            if (collTime > 0) 
+            {
+                m_CollisionList.addCollision(collTime + m_time, index, m_partList[p2].index());
+                // cout << "I added the collisions because collTime = " << collTime << endl;
+            }
+        }
+    }
+    return true;
+}
+
+
 bool DynamicsManager::updateSpeedFromCollision(size_t p1, size_t p2) 
 {
     // head-on collision 
@@ -390,8 +436,6 @@ bool DynamicsManager::initialize_anim_file()
 
     outfile << "---------------------- " << endl;
     outfile << "---- Ushi summary file " << endl;
-    outfile << "---------------------- " << endl;
-    outfile << "---- bla bla truc truc " << endl;
     outfile << "---------------------- " << endl;
     outfile << "nb_particles = " << m_n << " ; eps = " << m_eps << " ; endtime = " << m_endTime << endl;
     return true; 

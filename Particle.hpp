@@ -20,6 +20,7 @@ public:
     bool move(double dt);
     bool computeTimeBeforeNextWall();
     bool wallCollide();
+    bool teleport();
     bool headOnCollide(Particle& other);
     bool sideToSideCollide(Particle& other);
 

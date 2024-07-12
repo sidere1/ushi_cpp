@@ -162,6 +162,26 @@ bool Particle::wallCollide()
     }
     else 
     {
+        cout << "I'm not supposed to get here, Particle velocity does not seem to be correct : m_u = " << m_u << " ; m_v = " << m_v << endl;
+        return false; 
+    }
+    return computeTimeBeforeNextWall();
+}
+
+
+bool Particle::teleport()
+{
+    if (m_u != 0)
+    {
+        m_x = -m_x;
+    } 
+    else if (m_v != 0)
+    {
+        m_y = -m_y;
+    }
+    else 
+    {
+        cout << "I'm not supposed to get here, Particle velocity does not seem to be correct : m_u = " << m_u << " ; m_v = " << m_v << endl;
         return false; 
     }
     return computeTimeBeforeNextWall();

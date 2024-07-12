@@ -71,6 +71,7 @@ def animate_points(positions, time, output_file='animation.mp4'):
         ax.set_ylim(np.min([pos[:, 1].min() for pos in positions]), np.max([pos[:, 1].max() for pos in positions]))
         return scatter, title
     
+    FAUT CHANGER CA POUR QUE LES BORNES SOIENT LES MEMES ET MONTRENT LE DOMAINE LOSANGE 
     def update(frame):
         points = positions[frame]
         scatter.set_offsets(points)
@@ -88,7 +89,7 @@ def animate_points(positions, time, output_file='animation.mp4'):
     
 
 
-f = open("../summary.ushi", "r")
+f = open("../output/summary.ushi", "r")
 
 # reading header 
 line = f.readline()
@@ -136,6 +137,6 @@ n_time = len(time)
 
 point_size = epsilon 
 animate_points(positions, time)
-plot_points(positions, time, 99, point_size*50)
+plot_points(positions, time, n_time-1, point_size*50)
 f.close() 
 

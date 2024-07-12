@@ -1,48 +1,47 @@
-/*! 
-Main file
-creates a LatexFile class. 
-*/
-
 #define WHEREAMI cout << endl << "no crash until line " << __LINE__ << " in the file " __FILE__ << endl << endl;
 
-#include <iostream>
-#include <iomanip>
 #include <string>
-#include <cassert>
-// #include "BCMatrix.hpp"
-#include "CollisionList.hpp"
 #include "DynamicsManager.hpp"
-#include "Particle.hpp"
+#include <iostream>
+#include <fstream>
+// #include <nlohmann/json.hpp>
+#include "include/json.hpp"
 
-// #include "SparseContactMatrix.hpp"
-
-#include <algorithm>
-
-
+using json = nlohmann::json;
 using namespace std;
 
-
-// dixit stackoverflow
-char* getCmdOption(char ** begin, char ** end, const std::string & option)
+int main(int argc, char** argv)
 {
-    char ** itr = std::find(begin, end, option);
-    if (itr != end && ++itr != end)
-        return *itr;
-    return 0;
-}
-// idem 
-bool cmdOptionExists(char** begin, char** end, const std::string& option){return std::find(begin, end, option) != end;}
+    // récupération du fichier input 
+    if (argc < 2) {
+        cerr << "Usage: " << argv[0] << " <config_file_ushi.json>" << endl;
+        return 1;
+    }
+    ifstream configFile(argv[1]);
+    if (!configFile) {
+        cerr << "Could not open ushi config file " << argv[1] << endl;
+        return 1;
+    }
 
+    // lectire des paramètres 
+    json config;
+    configFile >> config;
 
+    size_t N = config["N"];
+    double alpha = config["alpha"];
+    bool verbose = config["verbose"];
+    bool exportAnim = config["exportAnim"];
+    string resultsDir = config["resultsDir"];
+    bool inTore = config["inTore"];
+    bool computeBC = config["computeBC"];
+    double dtExport = config["dtExport"];
+    double m_endTime = config["m_endTime"];
+    bool m_rememberSummary = config["m_rememberSummary"];
+    double m_arenaSize = config["m_arenaSize"];
 
-// int main(int argc, char** argv)
-int main()
-{
-    size_t N;
-    N = 3000;
-    bool verbose = false; 
-    bool export_anim = false; 
-    DynamicsManager d(N, verbose, export_anim);
+    // Création du dynamicsmanager et run 
+    DynamicsManager d(N, alpha, verbose, exportAnim, resultsDir, inTore, computeBC, dtExport, m_endTime, m_rememberSummary, m_arenaSize);
     d.run();
+    
     return 0;
 }
