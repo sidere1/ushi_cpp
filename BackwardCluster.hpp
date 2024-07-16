@@ -34,6 +34,8 @@ public:
     bool addRint(double t);
     bool initializeRext();
     bool addRext(double t);
+    bool addRextFast(double t);
+
 
 protected: 
     size_t m_n;

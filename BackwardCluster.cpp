@@ -120,7 +120,8 @@ bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime
         t2 = std::chrono::high_resolution_clock::now();
         rIntTime += std::chrono::duration<double, std::milli>(t2-t1).count();
         t1 = std::chrono::high_resolution_clock::now();
-        addRext(endTime - t0);
+        // addRext(endTime - t0);
+        addRextFast(endTime - t0);
         t2 = std::chrono::high_resolution_clock::now();
         rExtTime += std::chrono::duration<double, std::milli>(t2-t1).count();
     }
@@ -210,7 +211,6 @@ bool BackwardCluster::addRint(double t)
             rint += it->second;
         }
         rint -= m_bc[iPart].size();
-        // cout << "rint = " << rint << endl;
         if (rint > 0)
             rintProba++;
     }
@@ -247,36 +247,6 @@ bool BackwardCluster::initializeRext()
     return true;
 }
 
-// bool BackwardCluster::addRext(double t) version initiale qui est hyper lente mais qui marche 
-// {
-//     ofstream outfile(m_rextFile.c_str(), ios::app);
-//     if (!outfile)
-//         return false; 
-    
-//     double rext(0);
-//     double rextProba(0);
-//     for (size_t iPart = 0; iPart < m_n; iPart++)
-//     {
-//         rext = 0;
-//         auto bci = m_bc[iPart];
-//         for (size_t jPart = iPart+1; jPart < m_n; jPart++)
-//         {
-//             auto bcj = m_bc[jPart];
-//             for (auto it = bci.begin() ; it != bci.end() ; it++)
-//             {
-//                 if (bcj.find(it->first) != bcj.end())
-//                 {
-//                     rext += 1;
-//                     break;
-//                 } 
-//             }
-//         }
-//         if (rext > 0)
-//             rextProba++;
-//     }
-//     outfile << std::setw(12) << t << std::setw(12) << 2*rextProba/(m_n*(m_n-1)) << endl;
-//     return true;
-// }
 bool BackwardCluster::addRext(double t)
 {
     ofstream outfile(m_rextFile.c_str(), ios::app);
@@ -309,40 +279,41 @@ bool BackwardCluster::addRext(double t)
     return true;
 }
 
-
-
-// bool BackwardCluster::addRext(double t)
-// {
-//     ofstream outfile(m_rextFile.c_str(), ios::app);
-//     if (!outfile)
-//         return false; 
+bool BackwardCluster::addRextFast(double t)
+{
+    std::vector<bool> m_alreadyREext AAAAA un booléen qui dit si la particule est déjà dans les recollisions externes, pour échapper ) la ligne 300 301
+    ofstream outfile(m_rextFile.c_str(), ios::app);
+    if (!outfile)
+        return false; 
     
-//     double rext(0);
-//     double rextProba(0);
-//     for (size_t iPart = 0; iPart < m_n; iPart++)
-//     {
-//         rext = 0;
-//         auto bci = m_bc[iPart];
-//         for (size_t jPart = iPart+1; jPart < m_n; jPart++)
-//         {
-//             auto bcj = m_bc[jPart];
-//             // Construire un unordered_set uniquement avec les clés de bcj
-//             unordered_set<size_t> bcj_set;
-//             for (const auto& pair : bcj) {
-//                 bcj_set.insert(pair.first);
-//             }
-//             for (const auto& pair : bci)
-//             {
-//                 if (bcj_set.find(pair.first) != bcj_set.end())
-//                 {
-//                     rext += 1;
-//                     break;
-//                 }
-//             }
-//         }
-//         if (rext > 0)
-//             rextProba++;
-//     }
-//     outfile << std::setw(12) << t << std::setw(12) << 2*rextProba/(m_n*(m_n-1)) << endl;
-//     return true;
-// }
+    double rext(0);
+    double rextProba(0);
+    #pragma omp parallel for reduction(+:rextProba)
+    for (size_t iPart = 0; iPart < m_n; iPart++)
+    {
+        rext = 0;
+        const auto& bci = m_bc[iPart];
+        for (size_t jPart = iPart+1; jPart < m_n; jPart++)
+        {
+            if (m_bc[iPart][jPart] > 0 )
+            {
+                rext += 1;
+                break;
+            }
+            const auto& bcj = m_bc[jPart];
+            for (auto it = bci.begin() ; it != bci.end() ; it++)
+            {
+                if (bcj.find(it->first) != bcj.end())
+                {
+                    rext += 1;
+                    break;
+                } 
+            }
+        }
+        if (rext > 0)
+            rextProba++;
+    }
+    cout << "rextProba = " << rextProba << " 2*rextProba/(m_n*(m_n-1)) = " << 2*rextProba/(m_n*(m_n-1)) << endl;
+    outfile << std::setw(12) << t << std::setw(12) << 2*rextProba/(m_n*(m_n-1)) << endl;
+    return true;
+}
