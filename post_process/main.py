@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 import re
+import matplotlib.patches as patches
 
 def read_position(s):
     pattern = r'\s*(\d+)\s*\(\s*(-?[0-9.eE+-]+)\s*,\s*(-?[0-9.eE+-]+)\s*\)\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)\s*'
@@ -40,7 +41,12 @@ def plot_points(positions, time, index, point_size):
     # point_size = 1/N*100
     
     plt.figure()
+    point_size *= 50
     plt.scatter(points[:, 0], points[:, 1], c='blue', marker='d', s=point_size**2)
+    plt.xlim(-1, 1)
+    plt.ylim(-1, 1)
+    borne = np.sqrt(2)/2
+    plt.plot([-borne, 0, borne, 0, -borne], [0, borne, 0, -borne, 0], '-k')
     # plt.scatter(points[:, 0], points[:, 1], c='blue', marker='d', s=epsilon**2 * 1000)
     
     plt.title(f'Time: {timestamp:.2f}')
@@ -50,7 +56,56 @@ def plot_points(positions, time, index, point_size):
     plt.show()
     # plt.show(block=False)
 
-def animate_points(positions, time, output_file='animation.mp4'):
+# def animate_points(positions, time, output_file='animation.mp4', point_size=0.001):
+#     """
+#     Crée une animation en affichant les points et le time code correspondant sur l'image
+#     et enregistre l'animation dans un fichier MP4.
+    
+#     Parameters:
+#     positions (list of np.array): Liste des coordonnées des points.
+#     time (list of float): Liste des instants correspondants.
+#     output_file (str): Nom du fichier de sortie pour l'animation MP4.
+#     """
+#     fig, ax = plt.subplots()
+#     # scatter = ax.scatter([], [])
+#     point_size *= 50
+#     scatter = ax.scatter([], [], marker='d', s=point_size**2 *10000)  # Losanges de taille epsilon ? 
+
+#     title = ax.set_title('')
+    
+#     def init():
+#         ax.set_xlim(-0.8, 0.8)
+#         ax.set_ylim(-0.8, 0.8)
+#         borne = np.sqrt(2)/2
+#         ax.plot([-borne, 0, borne, 0, -borne], [0, borne, 0, -borne, 0], '-k')
+#         return scatter, title
+
+#     def update(frame):
+#         points = positions[frame]
+#         num_points = len(points)
+#         colors = ['black'] * num_points
+        
+#         # If two particles are colliding, they're drawn in red  
+#         for i in range(num_points):
+#             for j in range(i + 1, num_points):
+#                 if np.linalg.norm(points[i] - points[j]) < eps:
+#                     colors[i] = 'red'
+#                     colors[j] = 'red'
+        
+#         scatter.set_offsets(points)
+#         scatter.set_color(colors)
+#         title.set_text(f'Time: {time[frame]:.2f}')
+#         return scatter, title
+    
+#     ani = FuncAnimation(fig, update, frames=len(positions), init_func=init, blit=True, interval=200)
+    
+#     # Saving 
+#     writer = FFMpegWriter(fps=10, metadata=dict(artist='Me'), bitrate=1800)
+#     ani.save(output_file, writer=writer)
+    
+#     plt.close(fig)
+
+def animate_points(positions, time, output_file='animation.mp4', point_size=0.001):
     """
     Crée une animation en affichant les points et le time code correspondant sur l'image
     et enregistre l'animation dans un fichier MP4.
@@ -59,34 +114,56 @@ def animate_points(positions, time, output_file='animation.mp4'):
     positions (list of np.array): Liste des coordonnées des points.
     time (list of float): Liste des instants correspondants.
     output_file (str): Nom du fichier de sortie pour l'animation MP4.
+    point_size (float): Taille du côté du losange.
     """
     fig, ax = plt.subplots()
-    # scatter = ax.scatter([], [])
-    scatter = ax.scatter([], [], marker='d', s=epsilon**2 * 1000)  # Losanges de taille epsilon
-
     title = ax.set_title('')
-    
+
     def init():
-        ax.set_xlim(np.min([pos[:, 0].min() for pos in positions]), np.max([pos[:, 0].max() for pos in positions]))
-        ax.set_ylim(np.min([pos[:, 1].min() for pos in positions]), np.max([pos[:, 1].max() for pos in positions]))
-        return scatter, title
-    
-    FAUT CHANGER CA POUR QUE LES BORNES SOIENT LES MEMES ET MONTRENT LE DOMAINE LOSANGE 
+        ax.set_xlim(-0.8, 0.8)
+        ax.set_ylim(-0.8, 0.8)
+        borne = np.sqrt(2)/2
+        ax.plot([-borne, 0, borne, 0, -borne], [0, borne, 0, -borne, 0], '-k')
+        return []
+
+    def create_diamond(x, y, size):
+        half_size = size / 2
+        diamond = np.array([[x - half_size, y], [x, y + half_size], 
+                            [x + half_size, y], [x, y - half_size]])
+        return patches.Polygon(diamond, closed=True)
+
     def update(frame):
+        ax.clear()
+        init()  # Reset the plot to initial settings
+
         points = positions[frame]
-        scatter.set_offsets(points)
+        num_points = len(points)
+        patches_list = []
+
+        for i in range(num_points):
+            x, y = points[i]
+            losange = create_diamond(x, y, point_size)
+            losange.set_color('black')
+            patches_list.append(losange)
+            ax.add_patch(losange)
+        
+        # Check for collisions
+        for i in range(num_points):
+            for j in range(i + 1, num_points):
+                if np.linalg.norm(points[i] - points[j]) < point_size:
+                    patches_list[i].set_color('red')
+                    patches_list[j].set_color('red')
+
         title.set_text(f'Time: {time[frame]:.2f}')
-        return scatter, title
-    
+        return patches_list + [title]
+
     ani = FuncAnimation(fig, update, frames=len(positions), init_func=init, blit=True, interval=200)
     
-    # Enregistrer l'animation en fichier MP4
+    # Saving 
     writer = FFMpegWriter(fps=10, metadata=dict(artist='Me'), bitrate=1800)
     ani.save(output_file, writer=writer)
     
     plt.close(fig)
-    
-    
 
 
 f = open("../output/summary.ushi", "r")
@@ -97,12 +174,15 @@ while line[0] == '-':
     line = f.readline()
 
 numbers = re.findall(r'\d+', line)
+print(numbers)
+numbers = [float(num) for num in re.findall(r'-?\d+(?:\.\d+)?(?:e-?\d+)?', line)]
+print(numbers)
 N = int(numbers[0])
-eps = int(numbers[1])
-epsilon = 1 / N
+eps = float(numbers[1])
+# epsilon = 1 / N
 endtime = int(numbers[2])
 
-print(f"reading ushi file, N = {N} particles, eps = {eps}, endtime = {endtime}")
+print(f"reading uchi file, N = {N} particles, eps = {eps}, endtime = {endtime}")
 
 
 
@@ -123,6 +203,7 @@ while len(line) != 0:
     # print(f"I read t = {t}")
     for iPoint in np.arange(N):
         line = f.readline()
+        # print(line)
         index, x, y, u, v = read_position(line)
         pos[iPoint, :] = np.array([x, y])
     time.append(t)
@@ -132,11 +213,14 @@ while len(line) != 0:
 
 
 n_time = len(time)
+print(f"n_time = {n_time}")
 #n_time = 100
 #positions = positions[0:100]
 
-point_size = epsilon 
-animate_points(positions, time)
-plot_points(positions, time, n_time-1, point_size*50)
+point_size = eps 
+print(f"epsilon attendu : {eps}")
+animate_points(positions, time, point_size=eps)
+# plot_points(positions, time, n_time-1, eps)
+### plot_points(positions, time, n_time-1, point_size*50)
 f.close() 
 

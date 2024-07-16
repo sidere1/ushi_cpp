@@ -37,6 +37,8 @@ public:
     bool computeNextWallImpact();
     bool initialize_anim_file();
     bool add_anim_step();
+    bool printLoadingBar();
+
 
 protected: 
     size_t m_n;

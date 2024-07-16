@@ -22,6 +22,8 @@ CollisionList::CollisionList(size_t N, bool verbose, string resultDir):m_n(N), m
     m_flushFile = m_resultDir + "/collisionListFlush.ushi";
     ofstream outfile(m_flushFile);
     m_hasFlushed = false;
+
+    m_flush = false; // option pas encore codée ! Pas sûr que ce soit nécessaire non plus. 
 }
 
 bool CollisionList::addCollision(double t, size_t i, size_t j) 

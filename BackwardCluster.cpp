@@ -39,7 +39,6 @@ bool BackwardCluster::printBC(size_t nPart, size_t nClu)
 
 bool BackwardCluster::buildFromList(CollisionList cl, double t0, double t1)
 {
-    // auto gen = std::bind(std::uniform_int_distribution<>(0,1),std::default_random_engine());
     std::mt19937 gen(std::random_device{}());
     size_t p1;
     size_t p2;
@@ -138,7 +137,7 @@ bool BackwardCluster::initializeCard()
     ofstream outfile(m_cardFile.c_str());
     if (!outfile)
         return false; 
-    outfile << "t       Card " << endl;
+    outfile << "t       Card (" << m_n << " particles) " << endl;
     return true;
 }
 bool BackwardCluster::addCard(double t)

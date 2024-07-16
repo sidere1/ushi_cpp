@@ -33,14 +33,12 @@ DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool expo
 {
     cout << "-------------------------- " << endl;
     cout << "Beginning ushi computation " << endl;
-    cout << " * m_n = " << m_n << endl << " * m_endTime = " << m_endTime << endl << " * m_arenaSize = " << m_arenaSize << endl << " * m_eps = " << m_eps << endl << " * m_resultDir = " << m_resultDir << endl << " * m_inTore = " << m_inTore << endl << " * m_dtExport = " << m_dtExport << endl;
+    cout << " * m_n = " << m_n << endl << " * m_endTime = " << m_endTime << endl << " * m_arenaSize = " << m_arenaSize << endl << " * m_eps = " << m_eps << endl << " * m_resultDir = " << m_resultDir << endl << " * m_inTore = " << m_inTore << endl << " * m_computeBC = " << m_computeBC << endl << " * m_dtExport = " << m_dtExport << endl;
     cout << "-------------------------- " << endl << endl;
     
-    if (m_inTore)
-        cout << "WARNING ! Tore not available yet " << endl;
-    cout << "generating part list" << endl;
-    generatePartListDebug();
-    // generatePartList();
+    // cout << "generating part list" << endl;
+    // generatePartListDebug();
+    generatePartList();
     cout << "initializing collision list" << endl;
     initializeCL();
     if (m_verbose)
@@ -97,18 +95,22 @@ bool DynamicsManager::generatePartList()
 
 bool DynamicsManager::generatePartListDebug()
 {
-    m_n = 10;
     m_eps = m_alpha/m_n;
-    Particle p0 = Particle(0, -0.5, 0.1, 1, 0, m_eps, m_arenaSize);
-    Particle p1 = Particle(1, -0.4, 0.1, 1, 0, m_eps, m_arenaSize);
-    Particle p2 = Particle(2, -0.3, 0.1, 1, 0, m_eps, m_arenaSize);
-    Particle p3 = Particle(3, -0.2, 0.1, 1, 0, m_eps, m_arenaSize);
-    Particle p4 = Particle(4, -0.1, 0.1, 1, 0, m_eps, m_arenaSize);
-    Particle p5 = Particle(5,  0.1, 0.1, 1, 0, m_eps, m_arenaSize);
-    Particle p6 = Particle(6,  0.2, 0.1, 1, 0, m_eps, m_arenaSize);
-    Particle p7 = Particle(7,  0.3, 0.1, 1, 0, m_eps, m_arenaSize);
-    Particle p8 = Particle(8,  0.4, 0.1, 1, 0, m_eps, m_arenaSize);
-    Particle p9 = Particle(9,  0.5, 0.1, 1, 0, m_eps, m_arenaSize);
+    m_n = 13;
+    Particle p0 = Particle(0, -0.5000002 , 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p1 = Particle(1, -0.40000001, 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p2 = Particle(2, -0.30001   , 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p3 = Particle(3, -0.20002   , 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p4 = Particle(4, -0.10003   , 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p5 = Particle(5,  0.10004   , 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p6 = Particle(6,  0.20005   , 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p7 = Particle(7,  0.30006   , 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p8 = Particle(8,  0.40007   , 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p9 = Particle(9,  0.5001    , 0.1, 1, 0, m_eps, m_arenaSize);
+    Particle p10 = Particle(10,0.000001    , 0.1, 1, 0, m_eps, m_arenaSize);
+
+    Particle p11 = Particle(11, -0.4332, -0.1, 1 , 0, m_eps, m_arenaSize);
+    Particle p12 = Particle(12, -0.1, -0.4332, 0, 1, m_eps, m_arenaSize);
     m_partList.push_back(p0);
     m_partList.push_back(p1);
     m_partList.push_back(p2);
@@ -119,6 +121,9 @@ bool DynamicsManager::generatePartListDebug()
     m_partList.push_back(p7);
     m_partList.push_back(p8);
     m_partList.push_back(p9);
+    m_partList.push_back(p10);
+    m_partList.push_back(p11);
+    m_partList.push_back(p12);
     return true;
 }
 
@@ -174,15 +179,20 @@ bool DynamicsManager::run()
             std::pair<size_t, size_t> pair = m_CollisionList.nextColParts();
             size_t p1 = m_partList[pair.first].index(); 
             size_t p2 = m_partList[pair.second].index();  
-            cout << "next collision between " << p1 << " and " << p2 << " in " << dt << " (at t = " << nextColTime << ") ; next wall impact in " << m_nextWallImpactTime << endl;
+            if (p1 != p2) //  si la liste est vide, p1 = p2 = 0
+                cout << "next collision between " << p1 << " and " << p2 << " in " << dt << " (at t = " << nextColTime << ")" << endl;
+            else 
+                cout << "no next collision" << endl;
+            cout << "next wall impact in " << m_nextWallImpactTime << endl;
         }
 
         if (m_nextWallImpactTime < dt || nextColTime < 0)
         {
             if (m_nextWallImpactTime < 0)
             {
-                cout << "Interrupting because of remontage de temps" << endl;
-                printPartList();
+                cout << endl << "Interrupting, incorrect time management" << endl;
+                cout << "m_time : " << m_time << "; next wall impact time : " << m_nextWallImpactTime << "for particle " << m_nextWallImpactPart << "; next collTime : " << nextColTime << endl;
+                // printPartList();
                 m_CollisionList.printList(10);
                 return false;
             }
@@ -192,10 +202,15 @@ bool DynamicsManager::run()
             if (!move(m_nextWallImpactTime))
                 return false; 
             if (m_inTore)
+            {
                 if (!teleport(m_nextWallImpactPart))
                     return false; 
+            }
+            else
+            {
                 if (!wallCollide(m_nextWallImpactPart))
                     return false; 
+            } 
             wallCount++;
         }
         else if (dt >= 0)
@@ -216,26 +231,38 @@ bool DynamicsManager::run()
         {
             cout << "No valid reason to get here! " << endl; 
             m_CollisionList.printList(10);
-            printPartList();
+            // printPartList();
             return false; 
         }
         if (m_exportAnim)
             add_anim_step();
         if (m_verbose)
+        {
             m_CollisionList.printList(3);
+            // printPartList();
+        }
+        else 
+        { 
+            printLoadingBar();
+        }
     }
     if (m_verbose)
     {
         m_CollisionList.printList(10);
     }
-    cout << "Reached t = " << m_time << endl;
+    cout << endl << "Reached t = " << m_time << endl;
     cout << collisionCount << " collisions happened during the run, and " << wallCount << " wall impacts." << endl;
 
-    if (m_CollisionSummary.hasFlushed())
-        m_CollisionSummary.unflush();
-    m_CollisionSummary.printList(10);
-    m_bc.computeResults(m_CollisionSummary, m_dtExport, m_endTime);
-    m_bc.printBC(10, 4);
+    if (m_computeBC)
+    {
+        // if (m_CollisionSummary.hasFlushed())
+        //     m_CollisionSummary.unflush();
+        if (m_verbose)
+            cout << "Computing backward cluster" << endl;
+        m_CollisionSummary.printList(10);
+        m_bc.computeResults(m_CollisionSummary, m_dtExport, m_endTime);
+        m_bc.printBC(10, 4);
+    }
     return true;
 }
 
@@ -313,19 +340,17 @@ bool DynamicsManager::collide()
             if (collTime > 0) 
             {
                 m_CollisionList.addCollision(collTime+m_time, p1, p3);
-                // cout << "I added the collisiont because collTime = " << collTime << endl;
             }
             collTime = m_partList[p2].iWillCollide(m_partList[p3]);
             if (collTime > 0) 
             {
                 m_CollisionList.addCollision(collTime+m_time, p2, p3);
-                // cout << "I added the collisionz because collTime = " << collTime << endl;
             }
         }
     }
 
     // updating m_CollisionSummary
-    if (m_rememberSummary)
+    if (m_computeBC)
     {
         if (m_verbose)
             cout << "adding this collision to the summary" << endl;
@@ -353,7 +378,6 @@ bool DynamicsManager::wallCollide(size_t index)
             if (collTime > 0) 
             {
                 m_CollisionList.addCollision(collTime + m_time, index, m_partList[p2].index());
-                // cout << "I added the collisions because collTime = " << collTime << endl;
             }
         }
     }
@@ -362,7 +386,8 @@ bool DynamicsManager::wallCollide(size_t index)
 
 bool DynamicsManager::teleport(size_t index)
 {
-    // in the tore, instead of a collision, we teleport the particle on another side 
+    // in the tore, instead of a velocity change, there is a position change : we teleport the particle on another side 
+
     // poping all its collisions from the list 
     m_CollisionList.removeColsFromPart(index);
 
@@ -376,10 +401,9 @@ bool DynamicsManager::teleport(size_t index)
         if (index != p2)
         {
             double collTime = m_partList[index].iWillCollide(m_partList[p2]);
-            if (collTime > 0) 
+            if (collTime > 0)
             {
                 m_CollisionList.addCollision(collTime + m_time, index, m_partList[p2].index());
-                // cout << "I added the collisions because collTime = " << collTime << endl;
             }
         }
     }
@@ -452,5 +476,29 @@ bool DynamicsManager::add_anim_step()
     {
         outfile << m_partList[iPart] << endl;;
     }
+    return true; 
+}
+
+
+/**
+ * @brief Great function to print a progress bar 
+ * 
+ * @return true 
+ * @return false 
+ */
+bool DynamicsManager::printLoadingBar() {
+    // 
+    int barWidth = 50; // Largeur de la barre de progression
+    double progress = m_time / m_endTime;
+    int pos = static_cast<int>(barWidth * progress);
+
+    // Déplacer le curseur au début de la ligne et effacer la ligne
+    std::cout << "\r[";
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < pos) std::cout << "*";
+        else std::cout << " ";
+    }
+    std::cout << "] " << int(progress * 100.0) << " %";
+    std::cout.flush();
     return true; 
 }

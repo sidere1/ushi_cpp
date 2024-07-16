@@ -31,12 +31,12 @@ bool Particle::intersects(const Particle& other) const
 
 bool Particle::isOutsideTheBox() const
 {
-    if  ((abs(m_x) + abs(m_y) + m_eps > m_maxCoord))
+    if  ((abs(m_x) + abs(m_y) + m_eps > m_maxCoord*0.98))
     {
         // cout << "Elle est trop loin ta particule mon gars !"  << endl;
         return true ;
     }
-    if  ((abs(m_x) < 0.0001) ||(abs(m_y) < 0.0001)  )
+    if  ((abs(m_x) < 0.001) ||(abs(m_y) < 0.001)  )
     {
         // cout << "ça risque de taper bizarrement dans les coins, dans le doute je préfère virer ce cas-là" << endl;
         return true ;
@@ -61,9 +61,6 @@ bool Particle::move(double dt)
         cout << "Nom de Zeus Marty ! Tu essaies de remonter le temps ! " << endl;
         return false; 
     }
-    // cout << "moving with dt = " << dt << endl;
-    // cout << m_x << "becomes " << m_x + m_u*dt << endl;
-    // cout << m_y << "becomes " << m_y + m_v*dt << endl;
     m_x += m_u*dt;
     m_y += m_v*dt;
     return computeTimeBeforeNextWall();
@@ -171,19 +168,10 @@ bool Particle::wallCollide()
 
 bool Particle::teleport()
 {
-    if (m_u != 0)
-    {
-        m_x = -m_x;
-    } 
-    else if (m_v != 0)
-    {
-        m_y = -m_y;
-    }
-    else 
-    {
-        cout << "I'm not supposed to get here, Particle velocity does not seem to be correct : m_u = " << m_u << " ; m_v = " << m_v << endl;
-        return false; 
-    }
+    // cout << "teleporting particle " << m_index << " from (" << m_x << ";" << m_y << ") to "; 
+    m_x = -m_x;
+    m_y = -m_y;
+    // cout << "(" << m_x << ";" << m_y << ")." << endl; 
     return computeTimeBeforeNextWall();
 }
 
@@ -201,24 +189,36 @@ double Particle::iWillCollide(Particle other)
     // head-on collisions
     if ((abs(m_y-other.y()) < m_eps) && m_u*other.u() < 0)
     {// particles are moving on the same horizontal line with inverted speeds
-        if ((other.x()-m_x)*m_u > 0) return abs(other.x()-m_x)-m_eps; // they are getting closer : horizontal head-on collision /!\ true if v1=v2=1 
+        if ((other.x()-m_x)*m_u > 0) 
+        {
+            // cout << "Particle " << m_index << " with velocity " << m_u << m_v << " will collide with " << other.index() << " with velocity " << other.u() << other.v() << " in " << (abs(other.x()-m_x))/2 << endl;
+            return (abs(other.x()-m_x))/2; // they are getting closer : horizontal head-on collision /!\ true if v1=v2=1 
+        }
         return -1;
     }
     if ((abs(m_x-other.x()) < m_eps) && m_v*other.v() < 0)
     {// particles are moving on the same vertical line with inverted speeds
-        if ((other.y()-m_y)*m_v > 0) return abs(other.y()-m_y)-m_eps;// they are getting closer : vertical head-on collision   /!\ true if v1=v2=1 
+        if ((other.y()-m_y)*m_v > 0)
+        {
+            // cout << "Particle " << m_index << " with velocity " << m_u << m_v << " will collide with " << other.index() << " with velocity " << other.u() << other.v() << " in " << (abs(other.y()-m_y))/2 << endl;
+            return (abs(other.y()-m_y))/2;// they are getting closer : vertical head-on collision   /!\ true if v1=v2=1 
+        } 
         return -1;
     }
 
     // side-to-side collisions 
     if ((m_u*other.v() !=0) || m_v*other.u() !=0)
     {
-        if (abs(other.x() - m_x) == abs(other.y() - m_y))
+        double dx = abs(other.x() - m_x);
+        double dy = abs(other.y() - m_y);
+        if (abs(dx-dy) < m_eps)
         {
             double dt = abs(m_x-other.x());
-            if ((abs((m_x + m_u*dt) - (other.x()+other.u()*dt)) < m_eps) && (abs((m_y += m_v*dt) - (other.y()+other.v()*dt)) < m_eps)) 
-                return dt-m_eps; //A side-to-side collision
+            if ((abs((m_x + m_u*dt) - (other.x()+other.u()*dt)) < m_eps) && (abs((m_y + m_v*dt) - (other.y()+other.v()*dt)) < m_eps)) 
+                return dt; //A side-to-side collision
+                // return dt-m_eps; //A side-to-side collision
         }
+
     }
     return -1;
 }

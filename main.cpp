@@ -35,9 +35,9 @@ int main(int argc, char** argv)
     bool inTore = config["inTore"];
     bool computeBC = config["computeBC"];
     double dtExport = config["dtExport"];
-    double m_endTime = config["m_endTime"];
-    bool m_rememberSummary = config["m_rememberSummary"];
-    double m_arenaSize = config["m_arenaSize"];
+    double m_endTime = config["endTime"];
+    bool m_rememberSummary = config["rememberSummary"];
+    double m_arenaSize = config["arenaSize"];
 
     // Création du dynamicsmanager et run 
     DynamicsManager d(N, alpha, verbose, exportAnim, resultsDir, inTore, computeBC, dtExport, m_endTime, m_rememberSummary, m_arenaSize);
