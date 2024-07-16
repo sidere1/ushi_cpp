@@ -1,7 +1,7 @@
 #include "CollisionList.hpp"
 #include <fstream>
 #include <iomanip>
-#include <boost/filesystem.hpp>
+// #include <boost/filesystem.hpp>
 
 using namespace std;
 // using TimePoint = std::chrono::system_clock::time_point;
@@ -31,8 +31,8 @@ bool CollisionList::addCollision(double t, size_t i, size_t j)
     if (i > m_n) cout << "you asked for particle " << i << " which does not exist" << endl;
     if (j > m_n) cout << "you asked for particle " << j << " which does not exist" << endl;
     m_list[t] = std::make_pair(i, j);
-    if (m_verbose)
-        cout << "Adding collision at time " << t << " between " << i << " and " << j << endl;
+    // if (m_verbose)
+        // cout << "Adding collision at time " << t << " between " << i << " and " << j << endl;
     if (m_flush)
         if (m_list.size() > m_maxSize)
             return flush();
@@ -43,7 +43,7 @@ bool CollisionList::printList()
 {
     cout << "--------------------------------" << endl;
     cout << "Collision list ("  << m_list.size() << " entries)" << endl;
-    cout << "  Time    i    j" << endl;
+    cout << "  Time       i    j" << endl;
     cout << "--------------------------------" << endl;
     for (const auto& [key, value] : m_list) {
         std::cout << std::setw(10) << key << std::setw(5) << value.first << std::setw(5) << value.second << std::endl;
@@ -91,8 +91,8 @@ bool CollisionList::removeColsFromPart(size_t index)
     for (auto it = m_list.begin(); it != m_list.end(); ) 
     {
         if (it->second.first == index || it->second.second == index) {
-            if (m_verbose)
-                cout << "Removing collision at time " << it->first << " between " << it->second.first  << " and " << it->second.second << endl;
+            // if (m_verbose)
+                // cout << "Removing collision at time " << it->first << " between " << it->second.first  << " and " << it->second.second << endl;
             it = m_list.erase(it); // erase renvoie l'itérateur suivant
         } 
         else 

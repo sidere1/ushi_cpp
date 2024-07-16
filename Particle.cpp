@@ -211,10 +211,14 @@ double Particle::iWillCollide(Particle other)
     {
         double dx = abs(other.x() - m_x);
         double dy = abs(other.y() - m_y);
+        double dist1(sqrt(dx*dx+dy*dy));
         if (abs(dx-dy) < m_eps)
         {
             double dt = abs(m_x-other.x());
-            if ((abs((m_x + m_u*dt) - (other.x()+other.u()*dt)) < m_eps) && (abs((m_y + m_v*dt) - (other.y()+other.v()*dt)) < m_eps)) 
+            dx = abs(other.x()+ other.u()*dt - (m_x + m_u*dt));
+            dy = abs(other.y()+ other.v()*dt - (m_y + m_v*dt)); 
+            double dist2(sqrt(dx*dx+dy*dy));
+            if ((abs((m_x + m_u*dt) - (other.x()+other.u()*dt)) < m_eps) && (abs((m_y + m_v*dt) - (other.y()+other.v()*dt)) < m_eps) && dist2 < dist1) 
                 return dt; //A side-to-side collision
                 // return dt-m_eps; //A side-to-side collision
         }

@@ -23,6 +23,9 @@ public:
     BackwardCluster(size_t N, bool verbose, std::string resultDir);
     bool printBC(size_t nPart = 5, size_t nClu = 10);
     bool buildFromList(CollisionList cl, double t0, double t1);
+    bool buildFromList(std::map<double, std::pair<size_t, size_t>>::reverse_iterator begin, std::map<double, std::pair<size_t, size_t>>::reverse_iterator end);
+    // bool buildFromList(std::map<double, std::pair<size_t, size_t>>::iterator begin, std::map<double, std::pair<size_t, size_t>>::iterator end);
+
     void checkPartInBC(size_t i, size_t p1, size_t p2, std::mt19937 &gen);
     bool computeResults(CollisionList list, double dt, double endTime);
     bool initializeCard();
@@ -41,5 +44,8 @@ protected:
 
 
 #endif
+
+
+
 
 

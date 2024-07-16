@@ -2,7 +2,9 @@
 #include <fstream>
 #include <iomanip>
 #include <random>
-#include <boost/filesystem.hpp>
+// #include <boost/filesystem.hpp>
+#include <unordered_set>
+#include "include/omp.h"
 
 using namespace std;
 
@@ -37,55 +39,93 @@ bool BackwardCluster::printBC(size_t nPart, size_t nClu)
     return true; 
 }
 
-bool BackwardCluster::buildFromList(CollisionList cl, double t0, double t1)
+bool BackwardCluster::buildFromList(std::map<double, std::pair<size_t, size_t>>::reverse_iterator begin, std::map<double, std::pair<size_t, size_t>>::reverse_iterator end)
 {
     std::mt19937 gen(std::random_device{}());
     size_t p1;
     size_t p2;
-    double t;
-    if (t0 > t1)
-    {
-        cout << "Invalid parameters in builtFromList, t0 = " << t0 << ", t1 = " << t1 << endl;
-        return false; 
-    }
-
-    std::map<double, std::pair<size_t, size_t>> cl_list = cl.list();
+    // double t;
+    
     for (size_t iPart = 0; iPart < m_n; iPart++)
     {
         m_bc[iPart][iPart] = 1;
-        for (auto it = cl_list.rbegin(); it != cl_list.rend(); ++it) 
+        for (auto it = begin; it != end; ++it) 
         {
-            t = it->first;
-            if (t < t0)
+            // t = it->first;
+            p1 = it->second.first;
+            p2 = it->second.second;
+            if (p1 == iPart)
             {
-                break;
-            }
-            else if (t < t1)
-            {
-                p1 = it->second.first;
-                p2 = it->second.second;
-                if (p1 == iPart)
-                {
-                    if (m_bc[iPart].find(p2) == m_bc[iPart].end()) 
-                        m_bc[iPart][p2] = 1; // entry p2 does not exist in the bc of iPart
-                    else 
-                        m_bc[iPart][p2]++; // incrementing the count 
-                }
-                else if (p2 == iPart)
-                {
-                    if (m_bc[iPart].find(p1) == m_bc[iPart].end()) 
-                        m_bc[iPart][p1] = 1; // entry p1 does not exist in the bc of iPart
-                    else 
-                        m_bc[iPart][p1]++; // incrementing the count 
-                }
+                if (m_bc[iPart].find(p2) == m_bc[iPart].end()) 
+                    m_bc[iPart][p2] = 1; // entry p2 does not exist in the bc of iPart
                 else 
-                {
-                    checkPartInBC(iPart, p1, p2, gen);
-                }
+                    m_bc[iPart][p2]++; // incrementing the count 
+            }
+            else if (p2 == iPart)
+            {
+                if (m_bc[iPart].find(p1) == m_bc[iPart].end()) 
+                    m_bc[iPart][p1] = 1; // entry p1 does not exist in the bc of iPart
+                else 
+                    m_bc[iPart][p1]++; // incrementing the count 
+            }
+            else 
+            {
+                checkPartInBC(iPart, p1, p2, gen);
             }
         }
     }
     return true; 
+}
+
+
+bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime)
+{
+    double t0 = endTime;
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t2 = std::chrono::high_resolution_clock::now();
+    double buildTime(0);
+    double cardTime(0);
+    double rIntTime(0);
+    double rExtTime(0);
+
+    initializeCard();
+    initializeRint();
+    initializeRext();
+    size_t nInterval = (size_t)ceil(endTime/dt);
+
+    std::map<double, std::pair<size_t, size_t>> cl_list = cl.list();
+    auto it = cl_list.rbegin();
+    auto itEnd = cl_list.rend();
+
+    for (size_t iInterval = 0; iInterval < nInterval; iInterval++)
+    {
+        t0 -= dt;
+        auto begin = it;
+        while (it != itEnd && it->first >= t0)
+        {
+            ++it;
+        }
+        auto end = it;
+        t1 = std::chrono::high_resolution_clock::now();
+        buildFromList(begin, end);
+        t2 = std::chrono::high_resolution_clock::now();
+        buildTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+        t1 = std::chrono::high_resolution_clock::now();
+        addCard(endTime - t0);
+        t2 = std::chrono::high_resolution_clock::now();
+        cardTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+        t1 = std::chrono::high_resolution_clock::now();
+        addRint(endTime - t0);
+        t2 = std::chrono::high_resolution_clock::now();
+        rIntTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+        t1 = std::chrono::high_resolution_clock::now();
+        addRext(endTime - t0);
+        t2 = std::chrono::high_resolution_clock::now();
+        rExtTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    }
+    std::cout << "Backard cluster detailed chrono :" << endl << " building " << buildTime << " ms " << endl << "card : " << cardTime << " ms " << endl << "rInt : " << rIntTime << " ms " << endl << "rExt : " << rExtTime << endl; 
+    return true;
 }
 
 void BackwardCluster::checkPartInBC(size_t i, size_t p1, size_t p2, std::mt19937 &gen)
@@ -109,27 +149,6 @@ void BackwardCluster::checkPartInBC(size_t i, size_t p1, size_t p2, std::mt19937
         else 
             m_bc[i][p1]++;
     }
-}
-
-bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime)
-{
-    double t1 = endTime;
-    double t0 = t1-dt;
-
-    initializeCard();
-    initializeRint();
-    initializeRext();
-    size_t nInterval = (size_t)ceil(endTime/dt);
-    for (size_t iInterval = 0; iInterval < nInterval; iInterval++)
-    {
-        t0 = t1-dt;
-        buildFromList(cl, t0, t1);
-        addCard(endTime - t0);
-        addRint(endTime - t0);
-        addRext(endTime - t0);
-        t1 = t0;
-    }
-    return true; 
 }
 
 bool BackwardCluster::initializeCard()
@@ -227,6 +246,37 @@ bool BackwardCluster::initializeRext()
     outfile << "t    p^{e.r.}" << endl;
     return true;
 }
+
+// bool BackwardCluster::addRext(double t) version initiale qui est hyper lente mais qui marche 
+// {
+//     ofstream outfile(m_rextFile.c_str(), ios::app);
+//     if (!outfile)
+//         return false; 
+    
+//     double rext(0);
+//     double rextProba(0);
+//     for (size_t iPart = 0; iPart < m_n; iPart++)
+//     {
+//         rext = 0;
+//         auto bci = m_bc[iPart];
+//         for (size_t jPart = iPart+1; jPart < m_n; jPart++)
+//         {
+//             auto bcj = m_bc[jPart];
+//             for (auto it = bci.begin() ; it != bci.end() ; it++)
+//             {
+//                 if (bcj.find(it->first) != bcj.end())
+//                 {
+//                     rext += 1;
+//                     break;
+//                 } 
+//             }
+//         }
+//         if (rext > 0)
+//             rextProba++;
+//     }
+//     outfile << std::setw(12) << t << std::setw(12) << 2*rextProba/(m_n*(m_n-1)) << endl;
+//     return true;
+// }
 bool BackwardCluster::addRext(double t)
 {
     ofstream outfile(m_rextFile.c_str(), ios::app);
@@ -235,13 +285,14 @@ bool BackwardCluster::addRext(double t)
     
     double rext(0);
     double rextProba(0);
+    #pragma omp parallel for reduction(+:rextProba)
     for (size_t iPart = 0; iPart < m_n; iPart++)
     {
         rext = 0;
-        auto bci = m_bc[iPart];
+        const auto& bci = m_bc[iPart];
         for (size_t jPart = iPart+1; jPart < m_n; jPart++)
         {
-            auto bcj = m_bc[jPart];
+            const auto& bcj = m_bc[jPart];
             for (auto it = bci.begin() ; it != bci.end() ; it++)
             {
                 if (bcj.find(it->first) != bcj.end())
@@ -257,3 +308,41 @@ bool BackwardCluster::addRext(double t)
     outfile << std::setw(12) << t << std::setw(12) << 2*rextProba/(m_n*(m_n-1)) << endl;
     return true;
 }
+
+
+
+// bool BackwardCluster::addRext(double t)
+// {
+//     ofstream outfile(m_rextFile.c_str(), ios::app);
+//     if (!outfile)
+//         return false; 
+    
+//     double rext(0);
+//     double rextProba(0);
+//     for (size_t iPart = 0; iPart < m_n; iPart++)
+//     {
+//         rext = 0;
+//         auto bci = m_bc[iPart];
+//         for (size_t jPart = iPart+1; jPart < m_n; jPart++)
+//         {
+//             auto bcj = m_bc[jPart];
+//             // Construire un unordered_set uniquement avec les clés de bcj
+//             unordered_set<size_t> bcj_set;
+//             for (const auto& pair : bcj) {
+//                 bcj_set.insert(pair.first);
+//             }
+//             for (const auto& pair : bci)
+//             {
+//                 if (bcj_set.find(pair.first) != bcj_set.end())
+//                 {
+//                     rext += 1;
+//                     break;
+//                 }
+//             }
+//         }
+//         if (rext > 0)
+//             rextProba++;
+//     }
+//     outfile << std::setw(12) << t << std::setw(12) << 2*rextProba/(m_n*(m_n-1)) << endl;
+//     return true;
+// }

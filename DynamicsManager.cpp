@@ -1,6 +1,6 @@
 #include "DynamicsManager.hpp"
 #include <fstream>
-#include <boost/filesystem.hpp>
+// #include <boost/filesystem.hpp>
 #include "BCMatrix.hpp"
 #include "CollisionList.hpp"
 #include "Particle.hpp"
@@ -36,15 +36,17 @@ DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool expo
     cout << " * m_n = " << m_n << endl << " * m_endTime = " << m_endTime << endl << " * m_arenaSize = " << m_arenaSize << endl << " * m_eps = " << m_eps << endl << " * m_resultDir = " << m_resultDir << endl << " * m_inTore = " << m_inTore << endl << " * m_computeBC = " << m_computeBC << endl << " * m_dtExport = " << m_dtExport << endl;
     cout << "-------------------------- " << endl << endl;
     
-    // cout << "generating part list" << endl;
+    if (verbose)
+        cout << "generating part list" << endl;
     // generatePartListDebug();
     generatePartList();
-    cout << "initializing collision list" << endl;
+    if (verbose)
+        cout << "initializing collision list" << endl;
     initializeCL();
     if (m_verbose)
         printPartList();
     if (m_exportAnim)
-            initialize_anim_file();
+        initialize_anim_file();
 }
 
 bool DynamicsManager::generatePartList()
@@ -141,34 +143,42 @@ bool DynamicsManager::printPartList()
 
     return true;
 }
+bool DynamicsManager::printDetailedCollisionList(size_t head)
+{
+    cout << "--------------------------------" << endl;
+    cout << "Detailed collision list head " << endl;
+    cout << "  Time        i    j    (     xi   ,     yi   )(    x    j,    yj    )(ui,vi)(uj,vj)" << endl;
+    cout << "--------------------------------" << endl;
+
+    size_t count(0);
+    for (const auto& [key, value] : m_CollisionList.list()) {
+        if (count++ > head)
+            break;
+        std::cout << std::setw(10) << key << std::setw(5) << value.first << std::setw(5) << value.second;
+        std::cout << "    ("<< std::setw(10) << m_partList[value.first].x() << "," << std::setw(10) << m_partList[value.first].x() << ")";
+        std::cout << "("<< std::setw(10) << m_partList[value.second].x() << "," << std::setw(10) << m_partList[value.second].x() << ")";
+        std::cout << "("<< std::setw(2) << m_partList[value.first].u() << "," << std::setw(2) << m_partList[value.first].v() << ")";
+        std::cout << "("<< std::setw(2) << m_partList[value.second].u() << "," << std::setw(2) << m_partList[value.second].v() << ")" << endl;
+    }
+    cout << "--------------------------------" << endl << endl;
+
+    return true;
+}
 
 bool DynamicsManager::run()
 {
     initializeCL();
-    size_t debugStop(0);
     size_t collisionCount(0);
     size_t wallCount(0);
     m_CollisionList.printList(10);
     while (m_time < m_endTime)
     {
-        // if(debugStop++ > 1000)
-        if(debugStop++ < 0)
-        {
-            cout << "stopping on debug criterion" << endl;
-            if (m_verbose)
-            {
-                m_CollisionList.printList(10);
-                cout << collisionCount << " collisions happened during the run, and " << wallCount << " wall impacts." << endl;
-            }
-            return true;
-        }
-
         double nextColTime = m_CollisionList.nextColTime();
         if (nextColTime > 0 && nextColTime < m_time)
         {
-            cout << "strange error" << endl;
             m_CollisionList.printList(10);
             printPartList();
+            cout << "Interrupting, incorrect next collision time = "<< nextColTime << " at t = " << m_time  << endl;
             return false; 
         }
         double dt = nextColTime - m_time;
@@ -192,7 +202,6 @@ bool DynamicsManager::run()
             {
                 cout << endl << "Interrupting, incorrect time management" << endl;
                 cout << "m_time : " << m_time << "; next wall impact time : " << m_nextWallImpactTime << "for particle " << m_nextWallImpactPart << "; next collTime : " << nextColTime << endl;
-                // printPartList();
                 m_CollisionList.printList(10);
                 return false;
             }
@@ -229,9 +238,9 @@ bool DynamicsManager::run()
         }
         else 
         {
-            cout << "No valid reason to get here! " << endl; 
             m_CollisionList.printList(10);
-            // printPartList();
+            printPartList();
+            cout << "Interrupting : invalid dt = " << dt << endl; 
             return false; 
         }
         if (m_exportAnim)
@@ -239,7 +248,7 @@ bool DynamicsManager::run()
         if (m_verbose)
         {
             m_CollisionList.printList(3);
-            // printPartList();
+            printDetailedCollisionList(5);
         }
         else 
         { 
@@ -261,7 +270,7 @@ bool DynamicsManager::run()
             cout << "Computing backward cluster" << endl;
         m_CollisionSummary.printList(10);
         m_bc.computeResults(m_CollisionSummary, m_dtExport, m_endTime);
-        m_bc.printBC(10, 4);
+        // m_bc.printBC(10, 4);
     }
     return true;
 }

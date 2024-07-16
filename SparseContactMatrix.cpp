@@ -1,6 +1,6 @@
 #include "SparseContactMatrix.hpp"
 #include <fstream>
-#include <boost/filesystem.hpp>
+// #include <boost/filesystem.hpp>
 
 using namespace std;
 

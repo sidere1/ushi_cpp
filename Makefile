@@ -7,9 +7,9 @@ OBJECTS := $(patsubst %.cpp,%.o,$(SOURCES))
 DEPENDS := $(patsubst %.cpp,%.d,$(SOURCES))
 
 ifeq ($(UNAME), Darwin)
-CXXFLAGS := -std=c++17 -g -O3 -march=native
-LIBS = -I/opt/homebrew/Cellar/boost/1.82.0_1/include/ -I/Users/silouane/Documents/code/libs/boost/1.72.0 -I/opt/homebrew/Cellar/eigen/3.4.0_1/lib/ 
-LINKS = -I/opt/homebrew/include -L/opt/homebrew/lib -lboost_filesystem
+CXXFLAGS := -std=c++17 -g -O3 -march=native 
+LIBS = -I/opt/homebrew/Cellar/eigen/3.4.0_1/lib/  #-I/opt/homebrew/Cellar/boost/1.82.0_1/include/ -I/Users/silouane/Documents/code/libs/boost/1.72.0 
+LINKS = #-I/opt/homebrew/include -L/opt/homebrew/lib #-lboost_filesystem
 endif
 ifeq ($(UNAME), Linux)
 CXXFLAGS := -std=c++11 -g -O3 -march=native

@@ -26,6 +26,7 @@ public:
     bool generatePartList();
     bool generatePartListDebug();
     bool printPartList();
+    bool printDetailedCollisionList(size_t head);
     bool run();
     bool initializeCL();
     bool move(double dt);
