@@ -14,10 +14,12 @@ using namespace std;
 BackwardCluster::BackwardCluster(size_t N, bool verbose, string resultDir):m_n(N), m_verbose(verbose), m_resultDir(resultDir)
 {
     m_bc.resize(m_n);
+    m_alreadyRExt.resize(m_n);
     
-    m_cardFile = m_resultDir + "/cardFile.ushi";
-    m_rintFile = m_resultDir + "/rintFile.ushi";
-    m_rextFile = m_resultDir + "/rextFile.ushi";
+    m_cardFile = m_resultDir + "/cardFile.uchi";
+    m_rintFile = m_resultDir + "/rintFile.uchi";
+    m_rextFile = m_resultDir + "/rextFile.uchi";
+    m_exportFile = m_resultDir + "/backwardCluster.uchi";
 
     m_fullFiles = false;
 }
@@ -25,9 +27,11 @@ BackwardCluster::BackwardCluster(size_t N, bool verbose, string resultDir):m_n(N
 bool BackwardCluster::printBC(size_t nPart, size_t nClu)
 {
     cout << "Backward clusters " << endl; 
+    if (nPart < m_n)
+        nPart = m_n;
     for (size_t iPart = 0 ; iPart < nPart ; iPart++)
     {
-        cout << endl << "BC_" << iPart << " of size " << m_bc[iPart].size() << " : " ;
+        cout << endl << "BC_" << iPart << " ; K_ " << iPart << " = " << m_bc[iPart].size() << " : " ;
         size_t count = 0;
         for (auto it = m_bc[iPart].begin() ; it != m_bc[iPart].end() && count < nClu ; ++it)
         {
@@ -36,6 +40,29 @@ bool BackwardCluster::printBC(size_t nPart, size_t nClu)
         }
     }
     cout << endl;
+    return true; 
+}
+
+bool BackwardCluster::exportBC(size_t nPart, size_t nClu)
+{
+    ofstream outfile(m_exportFile);
+    if (!outfile)
+        return false; 
+
+    if (nPart < m_n)
+        nPart = m_n;
+    outfile << "Backward clusters (truncated for the " << nPart << " first particles and their " << nClu << " first items)" << endl; 
+    for (size_t iPart = 0 ; iPart < nPart ; iPart++)
+    {
+        outfile << endl << "BC_" << iPart << " ; K_ " << iPart << " = " << m_bc[iPart].size() << " : " ;
+        size_t count = 0;
+        for (auto it = m_bc[iPart].begin() ; it != m_bc[iPart].end() && count < nClu ; ++it)
+        {
+            count++;
+            outfile << it->first << "(" << it->second << ")" <<" ; ";
+        }
+    }
+    outfile << endl;
     return true; 
 }
 
@@ -125,7 +152,7 @@ bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime
         t2 = std::chrono::high_resolution_clock::now();
         rExtTime += std::chrono::duration<double, std::milli>(t2-t1).count();
     }
-    std::cout << "Backard cluster detailed chrono :" << endl << " building " << buildTime << " ms " << endl << "card : " << cardTime << " ms " << endl << "rInt : " << rIntTime << " ms " << endl << "rExt : " << rExtTime << endl; 
+    std::cout << "Backward cluster detailed chrono :" << endl << "building " << buildTime << " ms " << endl << "card : " << cardTime << " ms " << endl << "rInt : " << rIntTime << " ms " << endl << "rExt : " << rExtTime << endl; 
     return true;
 }
 
@@ -247,41 +274,48 @@ bool BackwardCluster::initializeRext()
     return true;
 }
 
-bool BackwardCluster::addRext(double t)
-{
-    ofstream outfile(m_rextFile.c_str(), ios::app);
-    if (!outfile)
-        return false; 
+// bool BackwardCluster::addRext(double t)
+// {
+//     ofstream outfile(m_rextFile.c_str(), ios::app);
+//     if (!outfile)
+//         return false; 
     
-    double rext(0);
-    double rextProba(0);
-    #pragma omp parallel for reduction(+:rextProba)
-    for (size_t iPart = 0; iPart < m_n; iPart++)
-    {
-        rext = 0;
-        const auto& bci = m_bc[iPart];
-        for (size_t jPart = iPart+1; jPart < m_n; jPart++)
-        {
-            const auto& bcj = m_bc[jPart];
-            for (auto it = bci.begin() ; it != bci.end() ; it++)
-            {
-                if (bcj.find(it->first) != bcj.end())
-                {
-                    rext += 1;
-                    break;
-                } 
-            }
-        }
-        if (rext > 0)
-            rextProba++;
-    }
-    outfile << std::setw(12) << t << std::setw(12) << 2*rextProba/(m_n*(m_n-1)) << endl;
-    return true;
-}
+//     double rext(0);
+//     double rextProba(0);
+//     #pragma omp parallel for reduction(+:rextProba)
+//     for (size_t iPart = 0; iPart < m_n; iPart++)
+//     {
+//         rext = 0;
+//         const auto& bci = m_bc[iPart];
+//         for (size_t jPart = iPart+1; jPart < m_n; jPart++)
+//         {
+//             const auto& bcj = m_bc[jPart];
+//             for (auto it = bci.begin() ; it != bci.end() ; it++)
+//             {
+//                 if (bcj.find(it->first) != bcj.end())
+//                 {
+//                     rext += 1;
+//                     break;
+//                 } 
+//             }
+//         }
+//         if (rext > 0)
+//             rextProba++;
+//     }
+//     outfile << std::setw(12) << t << std::setw(12) << 2*rextProba/(m_n*(m_n-1)) << endl;
+//     return true;
+// }
 
+/**
+ * @brief computes external recollision that occured during a time span of t  
+ * 
+ * contrary to addRext, this faster version uses m_alreadyRExt to prevent from recomputing all recollisions at each dtExport 
+ *  
+ * @param t double, used only as abciss in the export file 
+ * @return bool, true if the execution was successful 
+ */
 bool BackwardCluster::addRextFast(double t)
 {
-    std::vector<bool> m_alreadyREext AAAAA un booléen qui dit si la particule est déjà dans les recollisions externes, pour échapper ) la ligne 300 301
     ofstream outfile(m_rextFile.c_str(), ios::app);
     if (!outfile)
         return false; 
@@ -295,7 +329,7 @@ bool BackwardCluster::addRextFast(double t)
         const auto& bci = m_bc[iPart];
         for (size_t jPart = iPart+1; jPart < m_n; jPart++)
         {
-            if (m_bc[iPart][jPart] > 0 )
+            if (m_alreadyRExt[iPart].find(jPart) != m_alreadyRExt[iPart].end())
             {
                 rext += 1;
                 break;
@@ -306,6 +340,7 @@ bool BackwardCluster::addRextFast(double t)
                 if (bcj.find(it->first) != bcj.end())
                 {
                     rext += 1;
+                    m_alreadyRExt[iPart][jPart] = true;
                     break;
                 } 
             }
@@ -313,7 +348,7 @@ bool BackwardCluster::addRextFast(double t)
         if (rext > 0)
             rextProba++;
     }
-    cout << "rextProba = " << rextProba << " 2*rextProba/(m_n*(m_n-1)) = " << 2*rextProba/(m_n*(m_n-1)) << endl;
+    // cout << "rextProba = " << rextProba << " 2*rextProba/(m_n*(m_n-1)) = " << 2*rextProba/(m_n*(m_n-1)) << endl;
     outfile << std::setw(12) << t << std::setw(12) << 2*rextProba/(m_n*(m_n-1)) << endl;
     return true;
 }

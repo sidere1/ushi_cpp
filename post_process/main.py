@@ -166,7 +166,7 @@ def animate_points(positions, time, output_file='animation.mp4', point_size=0.00
     plt.close(fig)
 
 
-f = open("../output/summary.ushi", "r")
+f = open("../output/summary.uchi", "r")
 
 # reading header 
 line = f.readline()

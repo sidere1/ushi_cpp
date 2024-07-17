@@ -30,7 +30,6 @@ public:
     bool run();
     bool initializeCL();
     bool move(double dt);
-    bool updateTraj(size_t index);
     bool collide();
     bool wallCollide(size_t index);
     bool teleport(size_t index);
@@ -62,6 +61,14 @@ protected:
     std::string m_resultDir;
     bool m_inTore, m_computeBC;
     double m_dtExport;
+
+    // mesure du temps d'execution 
+    double m_verboseTime;
+    double m_exportTime;
+    double m_initTime;
+    double m_wallCollideTime;
+    double m_collideTime;
+    double m_moveTime;
 };
 
 

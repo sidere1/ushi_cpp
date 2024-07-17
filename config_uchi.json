@@ -1,5 +1,5 @@
 {
-  "N": 3000,
+  "N": 10,
   "alpha": 1.0,
   "verbose": false,
   "exportAnim": false,
@@ -7,7 +7,7 @@
   "inTore": false,
   "computeBC": true,
   "dtExport": 0.1,
-  "endTime": 2,
-  "rememberSummary": false,
+  "endTime": 1,
+  "rememberSummary": true,
   "arenaSize": 1.0
 }
