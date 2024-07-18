@@ -22,7 +22,7 @@ class BackwardCluster
 public:
     BackwardCluster(size_t N, bool verbose, std::string resultDir);
     bool printBC(size_t nPart = 10, size_t nClu = 10);
-    bool exportBC(size_t nPart = 10, size_t nClu = 10);
+    bool exportBC(size_t nPart = 20, size_t nClu = 20);
     bool buildFromList(CollisionList cl, double t0, double t1);
     bool buildFromList(std::map<double, std::pair<size_t, size_t>>::reverse_iterator begin, std::map<double, std::pair<size_t, size_t>>::reverse_iterator end);
     // bool buildFromList(std::map<double, std::pair<size_t, size_t>>::iterator begin, std::map<double, std::pair<size_t, size_t>>::iterator end);

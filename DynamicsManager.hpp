@@ -36,7 +36,7 @@ public:
     bool updateSpeedFromCollision(size_t p1, size_t p2);
     bool computeNextWallImpact();
     bool initialize_anim_file();
-    bool add_anim_step();
+    bool add_anim_step(std::pair<double, double>);
     bool printLoadingBar();
 
 

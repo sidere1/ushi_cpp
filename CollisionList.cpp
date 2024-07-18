@@ -53,7 +53,7 @@ bool CollisionList::printList()
 bool CollisionList::printList(size_t head) 
 {
     cout << "--------------------------------" << endl;
-    cout << "Collision list ("  << m_list.size() << " entries)" << endl;
+    cout << "Collision list (" << head << "/" << m_list.size() << " entries)" << endl;
     cout << "  Time    i    j" << endl;
     cout << "--------------------------------" << endl;
     size_t count = 0;

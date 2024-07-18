@@ -28,7 +28,8 @@ WARNING := -Wall -Wextra -pedantic
 
 all: prog
 ifeq ($(UNAME), Darwin)
-	caffeinate gtime -v ./prog config_uchi.json
+	caffeinate time ./prog config_uchi.json
+	# caffeinate gtime -v ./prog config_uchi.json
 	# time ./prog
 endif
 ifeq ($(UNAME), Linux)

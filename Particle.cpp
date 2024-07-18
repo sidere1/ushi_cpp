@@ -168,10 +168,20 @@ bool Particle::wallCollide()
 
 bool Particle::teleport()
 {
-    // cout << "teleporting particle " << m_index << " from (" << m_x << ";" << m_y << ") to "; 
-    m_x = -m_x;
-    m_y = -m_y;
-    // cout << "(" << m_x << ";" << m_y << ")." << endl; 
+    if (m_u != 0)
+    {
+        m_x = -m_x;
+    }
+    else if (m_v != 0)
+    {
+        m_y = - m_y;
+    }
+    else 
+    {
+        return false; 
+    }
+    // m_x = -m_x;
+    // m_y = -m_y;
     return computeTimeBeforeNextWall();
 }
 

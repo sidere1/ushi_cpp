@@ -54,58 +54,9 @@ def plot_points(positions, time, index, point_size):
     plt.ylabel('Y')
     plt.grid(True)
     plt.show()
-    # plt.show(block=False)
 
-# def animate_points(positions, time, output_file='animation.mp4', point_size=0.001):
-#     """
-#     Crée une animation en affichant les points et le time code correspondant sur l'image
-#     et enregistre l'animation dans un fichier MP4.
-    
-#     Parameters:
-#     positions (list of np.array): Liste des coordonnées des points.
-#     time (list of float): Liste des instants correspondants.
-#     output_file (str): Nom du fichier de sortie pour l'animation MP4.
-#     """
-#     fig, ax = plt.subplots()
-#     # scatter = ax.scatter([], [])
-#     point_size *= 50
-#     scatter = ax.scatter([], [], marker='d', s=point_size**2 *10000)  # Losanges de taille epsilon ? 
 
-#     title = ax.set_title('')
-    
-#     def init():
-#         ax.set_xlim(-0.8, 0.8)
-#         ax.set_ylim(-0.8, 0.8)
-#         borne = np.sqrt(2)/2
-#         ax.plot([-borne, 0, borne, 0, -borne], [0, borne, 0, -borne, 0], '-k')
-#         return scatter, title
-
-#     def update(frame):
-#         points = positions[frame]
-#         num_points = len(points)
-#         colors = ['black'] * num_points
-        
-#         # If two particles are colliding, they're drawn in red  
-#         for i in range(num_points):
-#             for j in range(i + 1, num_points):
-#                 if np.linalg.norm(points[i] - points[j]) < eps:
-#                     colors[i] = 'red'
-#                     colors[j] = 'red'
-        
-#         scatter.set_offsets(points)
-#         scatter.set_color(colors)
-#         title.set_text(f'Time: {time[frame]:.2f}')
-#         return scatter, title
-    
-#     ani = FuncAnimation(fig, update, frames=len(positions), init_func=init, blit=True, interval=200)
-    
-#     # Saving 
-#     writer = FFMpegWriter(fps=10, metadata=dict(artist='Me'), bitrate=1800)
-#     ani.save(output_file, writer=writer)
-    
-#     plt.close(fig)
-
-def animate_points(positions, time, output_file='animation.mp4', point_size=0.001):
+def animate_points(positions, time, output_file='animation.mp4', point_size=0.001, impactLocations=[]):
     """
     Crée une animation en affichant les points et le time code correspondant sur l'image
     et enregistre l'animation dans un fichier MP4.
@@ -118,12 +69,15 @@ def animate_points(positions, time, output_file='animation.mp4', point_size=0.00
     """
     fig, ax = plt.subplots()
     title = ax.set_title('')
+    drawImpacts = len(impactLocations) == len(time)
 
     def init():
         ax.set_xlim(-0.8, 0.8)
         ax.set_ylim(-0.8, 0.8)
+        ax.set_aspect('equal', adjustable='box')
         borne = np.sqrt(2)/2
         ax.plot([-borne, 0, borne, 0, -borne], [0, borne, 0, -borne, 0], '-k')
+        ax.set_aspect('equal')
         return []
 
     def create_diamond(x, y, size):
@@ -131,14 +85,27 @@ def animate_points(positions, time, output_file='animation.mp4', point_size=0.00
         diamond = np.array([[x - half_size, y], [x, y + half_size], 
                             [x + half_size, y], [x, y - half_size]])
         return patches.Polygon(diamond, closed=True)
+    
+    def create_circle(x, y, size):
+        radius = size / 2
+        circle = patches.Circle((x, y), radius)
+        return circle
 
     def update(frame):
         ax.clear()
-        init()  # Reset the plot to initial settings
+        init()
 
         points = positions[frame]
+        impactPoint = impactLocations[frame, :]
         num_points = len(points)
         patches_list = []
+
+        if drawImpacts:
+            # print(impactPoint)
+            # impactLoc = create_circle(impactPoint[0, 0], impactPoint[0,1], point_size*4)
+            impactLoc = create_circle(impactPoint[0], impactPoint[1], point_size*2)
+            impactLoc.set_color('red')
+            ax.add_patch(impactLoc)
 
         for i in range(num_points):
             x, y = points[i]
@@ -147,13 +114,7 @@ def animate_points(positions, time, output_file='animation.mp4', point_size=0.00
             patches_list.append(losange)
             ax.add_patch(losange)
         
-        # Check for collisions
-        for i in range(num_points):
-            for j in range(i + 1, num_points):
-                if np.linalg.norm(points[i] - points[j]) < point_size:
-                    patches_list[i].set_color('red')
-                    patches_list[j].set_color('red')
-
+        ax.add_patch(losange)
         title.set_text(f'Time: {time[frame]:.2f}')
         return patches_list + [title]
 
@@ -173,14 +134,12 @@ line = f.readline()
 while line[0] == '-':
     line = f.readline()
 
-numbers = re.findall(r'\d+', line)
-print(numbers)
 numbers = [float(num) for num in re.findall(r'-?\d+(?:\.\d+)?(?:e-?\d+)?', line)]
 print(numbers)
 N = int(numbers[0])
 eps = float(numbers[1])
 # epsilon = 1 / N
-endtime = int(numbers[2])
+endtime = float(numbers[2])
 
 print(f"reading uchi file, N = {N} particles, eps = {eps}, endtime = {endtime}")
 
@@ -190,6 +149,8 @@ print(f"reading uchi file, N = {N} particles, eps = {eps}, endtime = {endtime}")
 # reading times and positions 
 time = []
 positions = []
+impactLoc = np.zeros([1,2])
+impactLocations = np.zeros([0,2])
 while len(line) != 0:
     line = ''
     while len(line) < 2:
@@ -199,27 +160,27 @@ while len(line) != 0:
     if len(line) == 0:
         break
     t = float(re.findall(r'\d+(?:\.\d+)?', line)[0])
+    line = f.readline()
+    impactLoc[0,0] = float(re.findall(r'-?\d+(?:\.\d+)?(?:e-?\d+)?', line)[0])
+    line = f.readline()
+    impactLoc[0,1] = float(re.findall(r'-?\d+(?:\.\d+)?(?:e-?\d+)?', line)[0])
     pos = np.zeros((N, 2))
-    # print(f"I read t = {t}")
     for iPoint in np.arange(N):
         line = f.readline()
-        # print(line)
         index, x, y, u, v = read_position(line)
         pos[iPoint, :] = np.array([x, y])
     time.append(t)
+    impactLocations = np.append(impactLocations, impactLoc, axis=0)
     positions.append(pos)
 
 
 
 
 n_time = len(time)
-print(f"n_time = {n_time}")
-#n_time = 100
-#positions = positions[0:100]
+print(f"n_time = {n_time} ; eps = {eps}")
 
 point_size = eps 
-print(f"epsilon attendu : {eps}")
-animate_points(positions, time, point_size=eps)
+animate_points(positions, time, point_size=eps, impactLocations=impactLocations)
 # plot_points(positions, time, n_time-1, eps)
 ### plot_points(positions, time, n_time-1, point_size*50)
 f.close() 

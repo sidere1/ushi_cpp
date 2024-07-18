@@ -54,7 +54,7 @@ bool BackwardCluster::exportBC(size_t nPart, size_t nClu)
     outfile << "Backward clusters (truncated for the " << nPart << " first particles and their " << nClu << " first items)" << endl; 
     for (size_t iPart = 0 ; iPart < nPart ; iPart++)
     {
-        outfile << endl << "BC_" << iPart << " ; K_ " << iPart << " = " << m_bc[iPart].size() << " : " ;
+        outfile << endl << "BC_" << iPart << " ; K_" << iPart << "+1 = " << m_bc[iPart].size() << " : " ;
         size_t count = 0;
         for (auto it = m_bc[iPart].begin() ; it != m_bc[iPart].end() && count < nClu ; ++it)
         {

@@ -46,8 +46,8 @@ DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool expo
         cout << "generating part list" << endl;
 
     auto t1 = std::chrono::high_resolution_clock::now();
-    // generatePartListDebug();
-    generatePartList();
+    generatePartListDebug();
+    // generatePartList();
     if (verbose)
         cout << "initializing collision list" << endl;
     initializeCL();
@@ -107,8 +107,13 @@ bool DynamicsManager::generatePartList()
 
 bool DynamicsManager::generatePartListDebug()
 {
-    m_eps = m_alpha/m_n;
+
+    // m_eps = 0.01;
     m_n = 13;
+    m_eps = m_alpha/m_n;
+
+    // Particle p0 = Particle(0, -0.1, 0.1, 1, 0, m_eps, m_arenaSize);
+    // Particle p1 = Particle(1, 0   , 0.21, 0, -1, m_eps, m_arenaSize);
     Particle p0 = Particle(0, -0.5000002 , 0.1, 1, 0, m_eps, m_arenaSize);
     Particle p1 = Particle(1, -0.40000001, 0.1, 1, 0, m_eps, m_arenaSize);
     Particle p2 = Particle(2, -0.30001   , 0.1, 1, 0, m_eps, m_arenaSize);
@@ -123,6 +128,8 @@ bool DynamicsManager::generatePartListDebug()
 
     Particle p11 = Particle(11, -0.4332, -0.1, 1 , 0, m_eps, m_arenaSize);
     Particle p12 = Particle(12, -0.1, -0.4332, 0, 1, m_eps, m_arenaSize);
+    
+    
     m_partList.push_back(p0);
     m_partList.push_back(p1);
     m_partList.push_back(p2);
@@ -185,6 +192,7 @@ bool DynamicsManager::printDetailedCollisionList(size_t head)
 
 bool DynamicsManager::run()
 {
+    pair<double, double> impactLocation(make_pair(0.0,0.0));
     auto t1 = std::chrono::high_resolution_clock::now();
     auto t2 = std::chrono::high_resolution_clock::now();
 
@@ -248,6 +256,7 @@ bool DynamicsManager::run()
                 if (!wallCollide(m_nextWallImpactPart))
                     return false; 
             } 
+            impactLocation = make_pair(m_partList[m_nextWallImpactPart].x(), m_partList[m_nextWallImpactPart].y());
             wallCount++;
         }
         else if (dt >= 0)
@@ -262,6 +271,7 @@ bool DynamicsManager::run()
                 return false; 
             if (!collide())
                 return false; 
+            impactLocation = make_pair(m_partList[p1].x(), m_partList[p1].y());
             collisionCount++;
         }
         else 
@@ -272,24 +282,15 @@ bool DynamicsManager::run()
             return false; 
         }
         if (m_exportAnim)
-            add_anim_step();
+            add_anim_step(impactLocation);
         if (m_verbose)
-        {
             m_CollisionList.printList(3);
-            printDetailedCollisionList(5);
-        }
         else 
-        { 
             printLoadingBar();
-        }
-    }
-    if (m_verbose)
-    {
-        m_CollisionList.printList(10);
     }
     cout << endl << collisionCount << " collisions happened during the run, and " << wallCount << " wall impacts." << endl;
 
-    std::cout << endl << "Computation chrono :" << endl << "m_verboseTime : " << m_verboseTime << " ms " << endl << "m_initTime : " << m_initTime << " ms " << endl << "m_wallCollideTime : " << m_wallCollideTime << " ms " << endl << "m_collideTime : " << m_collideTime << " ms" << endl << "m_moveTime : " << m_moveTime << " ms" << endl << "m_exportTime : " << m_exportTime << " ms "  << endl << endl;
+    std::cout << endl << "Computation chrono :" << endl << "verboseTime : " << m_verboseTime << " ms " << endl << "initTime : " << m_initTime << " ms " << endl << "wallCollideTime : " << m_wallCollideTime << " ms " << endl << "collideTime : " << m_collideTime << " ms" << endl << "moveTime : " << m_moveTime << " ms" << endl << "exportTime : " << m_exportTime << " ms "  << endl << endl;
 
     if (m_computeBC)
     {
@@ -363,13 +364,7 @@ bool DynamicsManager::collide()
     m_CollisionList.removeColsFromPart(p2);
 
     // updating their speed 
-    if (m_verbose)
-        cout << "Before collision, (u1, v1) = (" << m_partList[p1].u() << "," << m_partList[p1].v() << ") ; (u2, v2) = (" << m_partList[p2].u() << "," << m_partList[p2].v() << ") " << endl;
-
     updateSpeedFromCollision(p1, p2);
-
-    if (m_verbose)
-        cout << "After collision, (u1, v1) = (" << m_partList[p1].u() << "," << m_partList[p1].v() << ") ; (u2, v2) = (" << m_partList[p2].u() << "," << m_partList[p2].v() << ") " << endl;
 
     // updating their time before wall impact
     m_partList[p1].computeTimeBeforeNextWall(); 
@@ -522,14 +517,14 @@ bool DynamicsManager::initialize_anim_file()
     return true; 
 }
 
-bool DynamicsManager::add_anim_step()
+bool DynamicsManager::add_anim_step(std::pair<double, double> impactLocation)
 {
     auto t1 = std::chrono::high_resolution_clock::now();
     ofstream outfile(m_export_file.c_str(), ios::app);
     if (!outfile)
         return false;
 
-    outfile << endl << m_time << endl;
+    outfile << endl << m_time << endl << impactLocation.first << endl << impactLocation.second << endl;
     for (size_t iPart = 0; iPart < m_partList.size(); ++iPart)
     {
         outfile << m_partList[iPart] << endl;;
