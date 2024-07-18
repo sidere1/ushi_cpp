@@ -1,18 +1,19 @@
-ushi_cpp
+uchi_cpp
 ==============================
 
-Statement of purpose 
+Uchiyama's model 
 ------------------------------
 
-* Ushiyama 
+* Uchiyama's model, collisions of square particles, backward cluster and recollisions 
 *  
 *  
 
 Usage 
 ------------------------------
 
-* 
-* 
+* edit parameter file, config_uchi.json for instance 
+* compile and run with make all 
+* run with ./prog config_uchi.json 
 * 
 
 Compatibility  

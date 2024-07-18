@@ -6,13 +6,7 @@ DynamicsManager class
 */
 
 #include<iostream> 
-// #include <filesystem>
-// #include <Eigen/Dense>
 #include <map>
-// #include <chrono>
-// #include <utility> // pour std::pair
-// #include <iomanip> // pour std::put_time
-#include "BCMatrix.hpp"
 #include "CollisionList.hpp"
 #include "BackwardCluster.hpp"
 #include "Particle.hpp"
@@ -45,7 +39,7 @@ protected:
     double m_alpha;
     bool m_verbose;
     bool m_exportAnim;
-    BCMatrix m_BCMatrix;
+    // BCMatrix m_BCMatrix;
     CollisionList m_CollisionList;
     CollisionList m_CollisionSummary;
     double m_endTime;

@@ -7,7 +7,6 @@ CollisionList class
 
 #include<iostream> 
 #include <filesystem>
-#include <Eigen/Dense>
 #include <map>
 #include <chrono>
 #include <utility> // pour std::pair

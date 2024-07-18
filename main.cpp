@@ -4,7 +4,6 @@
 #include "DynamicsManager.hpp"
 #include <iostream>
 #include <fstream>
-// #include <nlohmann/json.hpp>
 #include "include/json.hpp"
 
 using json = nlohmann::json;
@@ -14,12 +13,12 @@ int main(int argc, char** argv)
 {
     // récupération du fichier input 
     if (argc < 2) {
-        cerr << "Usage: " << argv[0] << " <config_file_ushi.json>" << endl;
+        cerr << "Usage: " << argv[0] << " <config_file_uchi.json>" << endl;
         return 1;
     }
     ifstream configFile(argv[1]);
     if (!configFile) {
-        cerr << "Could not open ushi config file " << argv[1] << endl;
+        cerr << "Could not open uchi config file " << argv[1] << endl;
         return 1;
     }
 

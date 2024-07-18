@@ -1,12 +1,8 @@
 #include "CollisionList.hpp"
 #include <fstream>
 #include <iomanip>
-// #include <boost/filesystem.hpp>
 
 using namespace std;
-// using TimePoint = std::chrono::system_clock::time_point;
-
-#define WHEREAMI cout << endl << "no crash until line " << __LINE__ << " in the file " __FILE__ << endl << endl;
 
 
 CollisionList::CollisionList(size_t N, bool verbose):m_n(N), m_verbose(verbose), m_flush(false)

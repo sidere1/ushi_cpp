@@ -1,7 +1,7 @@
 {
   "N": 100,
   "alpha": 1.0,
-  "verbose": true,
+  "verbose": false,
   "exportAnim": true,
   "resultsDir": "output",
   "inTore": true,

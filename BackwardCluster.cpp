@@ -2,13 +2,11 @@
 #include <fstream>
 #include <iomanip>
 #include <random>
-// #include <boost/filesystem.hpp>
 #include <unordered_set>
 #include "include/omp.h"
 
 using namespace std;
-
-#define WHEREAMI cout << endl << "no crash until line " << __LINE__ << " in the file " __FILE__ << endl << endl;
+#define now std::chrono::high_resolution_clock::now() ;
 
 
 BackwardCluster::BackwardCluster(size_t N, bool verbose, string resultDir):m_n(N), m_verbose(verbose), m_resultDir(resultDir)
@@ -109,8 +107,8 @@ bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime
 {
     double t0 = endTime;
 
-    auto t1 = std::chrono::high_resolution_clock::now();
-    auto t2 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
+    auto t2 = now;
     double buildTime(0);
     double cardTime(0);
     double rIntTime(0);
@@ -134,23 +132,23 @@ bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime
             ++it;
         }
         auto end = it;
-        t1 = std::chrono::high_resolution_clock::now();
+        t1 = now;
         buildFromList(begin, end);
-        t2 = std::chrono::high_resolution_clock::now();
-        buildTime += std::chrono::duration<double, std::milli>(t2-t1).count();
-        t1 = std::chrono::high_resolution_clock::now();
+        t2 = now;
+        buildTime += chrono::duration<double, std::milli>(t2-t1).count();
+        t1 = now;
         addCard(endTime - t0);
-        t2 = std::chrono::high_resolution_clock::now();
-        cardTime += std::chrono::duration<double, std::milli>(t2-t1).count();
-        t1 = std::chrono::high_resolution_clock::now();
+        t2 = now;
+        cardTime += chrono::duration<double, std::milli>(t2-t1).count();
+        t1 = now;
         addRint(endTime - t0);
-        t2 = std::chrono::high_resolution_clock::now();
-        rIntTime += std::chrono::duration<double, std::milli>(t2-t1).count();
-        t1 = std::chrono::high_resolution_clock::now();
+        t2 = now;
+        rIntTime += chrono::duration<double, std::milli>(t2-t1).count();
+        t1 = now;
         // addRext(endTime - t0);
         addRextFast(endTime - t0);
-        t2 = std::chrono::high_resolution_clock::now();
-        rExtTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+        t2 = now;
+        rExtTime += chrono::duration<double, std::milli>(t2-t1).count();
     }
     std::cout << "Backward cluster detailed chrono :" << endl << "building " << buildTime << " ms " << endl << "card : " << cardTime << " ms " << endl << "rInt : " << rIntTime << " ms " << endl << "rExt : " << rExtTime << endl; 
     return true;

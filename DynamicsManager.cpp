@@ -1,21 +1,18 @@
 #include "DynamicsManager.hpp"
 #include <fstream>
-// #include <boost/filesystem.hpp>
-#include "BCMatrix.hpp"
 #include "CollisionList.hpp"
 #include "Particle.hpp"
 #include <random>
 
 using namespace std;
-
-#define WHEREAMI cout << endl << "no crash until line " << __LINE__ << " in the file " __FILE__ << endl << endl;
+#define now std::chrono::high_resolution_clock::now() ;
 
 DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool exportAnim, std::string resultDir, bool inTore, bool computeBC, double dtExport, double endTime, bool rememberSummary, double arenaSize):
     m_n(N),
     m_alpha(alpha),
     m_verbose(verbose),
     m_exportAnim(exportAnim),
-    m_BCMatrix(BCMatrix(N)),
+    // m_BCMatrix(BCMatrix(N)),
     m_CollisionList(CollisionList(N, verbose)),
     m_CollisionSummary(CollisionList(N, verbose, resultDir)),
     m_endTime(endTime),
@@ -38,21 +35,21 @@ DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool expo
     m_moveTime(0)
 {
     cout << "-------------------------- " << endl;
-    cout << "Beginning ushi computation " << endl;
+    cout << "Beginning uchi computation " << endl;
     cout << " * m_n = " << m_n << endl << " * m_endTime = " << m_endTime << endl << " * m_arenaSize = " << m_arenaSize << endl << " * m_eps = " << m_eps << endl << " * m_resultDir = " << m_resultDir << endl << " * m_inTore = " << m_inTore << endl << " * m_computeBC = " << m_computeBC << endl << " * m_dtExport = " << m_dtExport << endl;
     cout << "-------------------------- " << endl << endl;
     
     if (verbose)
         cout << "generating part list" << endl;
 
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
     generatePartListDebug();
     // generatePartList();
     if (verbose)
         cout << "initializing collision list" << endl;
     initializeCL();
-    auto t2 = std::chrono::high_resolution_clock::now();
-    m_initTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    auto t2 = now;
+    m_initTime += chrono::duration<double, std::milli>(t2-t1).count();
     if (m_verbose)
         printPartList();
     if (m_exportAnim)
@@ -148,7 +145,7 @@ bool DynamicsManager::generatePartListDebug()
 
 bool DynamicsManager::printPartList()
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
     cout << "--------------------------------" << endl;
     cout << "Particle list " << endl;
     cout << "index   (   x ,   y )    ( u, v)" << endl;
@@ -159,14 +156,14 @@ bool DynamicsManager::printPartList()
     }
     cout << "--------------------------------" << endl << endl;
 
-    auto t2 = std::chrono::high_resolution_clock::now();
-    m_verboseTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    auto t2 = now;
+    m_verboseTime += chrono::duration<double, std::milli>(t2-t1).count();
 
     return true;
 }
 bool DynamicsManager::printDetailedCollisionList(size_t head)
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
     cout << "--------------------------------" << endl;
     cout << "Detailed collision list head " << endl;
     cout << "  Time        i    j    (     xi   ,     yi   )(    x    j,    yj    )(ui,vi)(uj,vj)" << endl;
@@ -184,8 +181,8 @@ bool DynamicsManager::printDetailedCollisionList(size_t head)
     }
     cout << "--------------------------------" << endl << endl;
 
-    auto t2 = std::chrono::high_resolution_clock::now();
-    m_verboseTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    auto t2 = now;
+    m_verboseTime += chrono::duration<double, std::milli>(t2-t1).count();
 
     return true;
 }
@@ -193,13 +190,13 @@ bool DynamicsManager::printDetailedCollisionList(size_t head)
 bool DynamicsManager::run()
 {
     pair<double, double> impactLocation(make_pair(0.0,0.0));
-    auto t1 = std::chrono::high_resolution_clock::now();
-    auto t2 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
+    auto t2 = now;
 
-    t1 = std::chrono::high_resolution_clock::now();
+    t1 = now;
     initializeCL();
-    t2 = std::chrono::high_resolution_clock::now();
-    m_initTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    t2 = now;
+    m_initTime += chrono::duration<double, std::milli>(t2-t1).count();
 
     size_t collisionCount(0);
     size_t wallCount(0);
@@ -219,7 +216,7 @@ bool DynamicsManager::run()
         
         if (m_verbose)
         {
-            t1 = std::chrono::high_resolution_clock::now();
+            t1 = now;
             std::pair<size_t, size_t> pair = m_CollisionList.nextColParts();
             size_t p1 = m_partList[pair.first].index(); 
             size_t p2 = m_partList[pair.second].index();  
@@ -228,8 +225,8 @@ bool DynamicsManager::run()
             else 
                 cout << "no next collision" << endl;
             cout << "next wall impact in " << m_nextWallImpactTime << endl;
-            t2 = std::chrono::high_resolution_clock::now();
-            m_verboseTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+            t2 = now;
+            m_verboseTime += chrono::duration<double, std::milli>(t2-t1).count();
         }
 
         if (m_nextWallImpactTime < dt || nextColTime < 0)
@@ -306,19 +303,19 @@ bool DynamicsManager::run()
     }
     if (m_rememberSummary)
     {
-        auto t1 = std::chrono::high_resolution_clock::now();
+        auto t1 = now;
         m_CollisionSummary.flush();
         if (m_computeBC)
             m_bc.exportBC();
-        auto t2 = std::chrono::high_resolution_clock::now();
-        m_exportTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+        auto t2 = now;
+        m_exportTime += chrono::duration<double, std::milli>(t2-t1).count();
     }
     return true;
 }
 
 bool DynamicsManager::initializeCL()
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
 
     for (size_t iPart = 0 ; iPart < m_partList.size() ; iPart++) 
     {
@@ -333,26 +330,26 @@ bool DynamicsManager::initializeCL()
             }
         }
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
-    m_initTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    auto t2 = now;
+    m_initTime += chrono::duration<double, std::milli>(t2-t1).count();
     return true;
 }
 
 bool DynamicsManager::move(double dt)
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
     #pragma omp parallel for 
     for (Particle& particle : m_partList) {
         particle.move(dt);
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
-    m_moveTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    auto t2 = now;
+    m_moveTime += chrono::duration<double, std::milli>(t2-t1).count();
     return true;
 }
 
 bool DynamicsManager::collide()
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
     // on récupère les deux particules de la liste 
     std::pair<size_t, size_t> collidingParts = m_CollisionList.nextColParts();
 
@@ -388,8 +385,8 @@ bool DynamicsManager::collide()
             }
         }
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
-    m_collideTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    auto t2 = now;
+    m_collideTime += chrono::duration<double, std::milli>(t2-t1).count();
 
     // updating m_CollisionSummary
     if (m_computeBC || m_rememberSummary)
@@ -401,7 +398,7 @@ bool DynamicsManager::collide()
 
 bool DynamicsManager::wallCollide(size_t index)
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
     // poping all its collisions from the list 
     m_CollisionList.removeColsFromPart(index);
 
@@ -421,14 +418,14 @@ bool DynamicsManager::wallCollide(size_t index)
             }
         }
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
-    m_wallCollideTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    auto t2 = now;
+    m_wallCollideTime += chrono::duration<double, std::milli>(t2-t1).count();
     return true;
 }
 
 bool DynamicsManager::teleport(size_t index)
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
     // in the tore, instead of a velocity change, there is a position change : we teleport the particle on another side 
 
     // poping all its collisions from the list 
@@ -450,8 +447,8 @@ bool DynamicsManager::teleport(size_t index)
             }
         }
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
-    m_wallCollideTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    auto t2 = now;
+    m_wallCollideTime += chrono::duration<double, std::milli>(t2-t1).count();
     return true;
 }
 
@@ -500,26 +497,26 @@ bool DynamicsManager::computeNextWallImpact()
 
 bool DynamicsManager::initialize_anim_file()
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
 
     ofstream outfile(m_export_file.c_str());
     if (!outfile)
         return false;
 
     outfile << "---------------------- " << endl;
-    outfile << "---- Ushi summary file " << endl;
+    outfile << "---- Uchi summary file " << endl;
     outfile << "---------------------- " << endl;
     outfile << "nb_particles = " << m_n << " ; eps = " << m_eps << " ; endtime = " << m_endTime << endl;
 
-    auto t2 = std::chrono::high_resolution_clock::now();
-    m_exportTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    auto t2 = now;
+    m_exportTime += chrono::duration<double, std::milli>(t2-t1).count();
     
     return true; 
 }
 
 bool DynamicsManager::add_anim_step(std::pair<double, double> impactLocation)
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = now;
     ofstream outfile(m_export_file.c_str(), ios::app);
     if (!outfile)
         return false;
@@ -529,8 +526,8 @@ bool DynamicsManager::add_anim_step(std::pair<double, double> impactLocation)
     {
         outfile << m_partList[iPart] << endl;;
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
-    m_exportTime += std::chrono::duration<double, std::milli>(t2-t1).count();
+    auto t2 = now;
+    m_exportTime += chrono::duration<double, std::milli>(t2-t1).count();
     return true; 
 }
 

@@ -4,6 +4,8 @@ output/
 *.o
 prog
 *.ushi
+*.uchi 
+*/*.uchi
 post_process/__pycache__/
 post_process/*.mp4
 config_uchi.json

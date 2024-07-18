@@ -2,12 +2,7 @@
 #include <iostream>
 #include <iomanip>
 
-
-
 using namespace std;
-
-#define WHEREAMI cout << endl << "no crash until line " << __LINE__ << " in the file " __FILE__ << endl << endl;
-
 
 int sign(double i) {
     if (i >= 0)
