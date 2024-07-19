@@ -1,5 +1,4 @@
 #include "Particle.hpp"
-#include <iostream>
 #include <iomanip>
 
 using namespace std;
@@ -11,9 +10,19 @@ int sign(double i) {
         return -1;
 }
 
+/**
+ * @brief Default constructor for the Particle class.
+ */
 Particle::Particle()
 {}
 
+/**
+ * @brief Checks if this particle intersects with another particle.
+ * 
+ * @param other The other particle to check intersection with.
+ * @return true If the particles intersect.
+ * @return false If the particles do not intersect.
+ */
 bool Particle::intersects(const Particle& other) const 
 {
     if  ((abs(m_x-other.x()) < m_eps) && (abs(m_y-other.y()) < m_eps))
@@ -24,6 +33,12 @@ bool Particle::intersects(const Particle& other) const
     return false;
 }
 
+/**
+ * @brief Checks if the particle is outside the defined box.
+ * 
+ * @return true If the particle is outside the box.
+ * @return false If the particle is inside the box.
+ */
 bool Particle::isOutsideTheBox() const
 {
     if  ((abs(m_x) + abs(m_y) + m_eps > m_maxCoord*0.98))
@@ -39,16 +54,35 @@ bool Particle::isOutsideTheBox() const
     return false;
 }
 
-
-Particle::Particle(size_t ind, double x, double y, double u, double v, double eps, double L):m_index(ind), m_u(u), m_v(v), m_x(x), m_y(y), m_eps(eps), m_L(L), m_maxCoord(m_L*sqrt(2)/2)
+/**
+ * @brief Constructs a Particle with specified parameters.
+ * 
+ * @param ind Index of the particle.
+ * @param x X-coordinate of the particle.
+ * @param y Y-coordinate of the particle.
+ * @param u X-velocity of the particle.
+ * @param v Y-velocity of the particle.
+ * @param eps particle width (diagonal of the corresponding square).
+ * @param L Length of the box.
+ */
+Particle::Particle(size_t ind, double x, double y, double u, double v, double eps, double L)
+    : m_index(ind), m_u(u), m_v(v), m_x(x), m_y(y), m_eps(eps), m_L(L), m_maxCoord(m_L*sqrt(2)/2)
 {
-    // check that u/v sont pas tout les deux nuls ni tous les deux non nuls
+    // check that u/v are not both zero nor both non-zero
     if ((u == 0 && v == 0) || (u != 0 && v != 0))
     {
         cout << "CAUTION ! invalid particle velocity" << endl;
     }
     computeTimeBeforeNextWall();
 }
+
+/**
+ * @brief Moves the particle by a specified time step.
+ * 
+ * @param dt Time step to move the particle.
+ * @return true If the move was successful and time before next wall impact is computed successfully.
+ * @return false If the move was not successful.
+ */
 bool Particle::move(double dt)
 {
     if (dt < 0)
@@ -61,6 +95,14 @@ bool Particle::move(double dt)
     return computeTimeBeforeNextWall();
 }
 
+/**
+ * @brief Sets the speed of the particle.
+ * 
+ * @param u New X-velocity of the particle.
+ * @param v New Y-velocity of the particle.
+ * @return true If the speed was successfully set.
+ * @return false If the speed was not valid.
+ */
 bool Particle::setSpeed(double u, double v)
 {
     if (u !=0 && v != 0)
@@ -78,6 +120,12 @@ bool Particle::setSpeed(double u, double v)
     return computeTimeBeforeNextWall();
 }
 
+/**
+ * @brief Computes the time before the particle hits the next wall.
+ * 
+ * @return true If the computation was successful
+ * @return false If an error occured.
+ */
 bool Particle::computeTimeBeforeNextWall()
 {
     if (abs(m_x) +abs(m_y) + m_eps/2 > m_L)
@@ -102,6 +150,12 @@ bool Particle::computeTimeBeforeNextWall()
     return true; 
 }
 
+/**
+ * @brief Handles the wall collision 
+ * 
+ * @return true If the collision was successfully handled.
+ * @return false If an error occurred.
+ */
 bool Particle::wallCollide()
 {
     if (m_u > 0) 
@@ -160,7 +214,12 @@ bool Particle::wallCollide()
     return computeTimeBeforeNextWall();
 }
 
-
+/**
+ * @brief Teleports the particle to the opposite side to emulate a periodic boundary condition 
+ * 
+ * @return true If the teleportation was successful.
+ * @return false If an error occurred.
+ */
 bool Particle::teleport()
 {
     if (m_u != 0)
@@ -175,16 +234,16 @@ bool Particle::teleport()
     {
         return false; 
     }
-    // m_x = -m_x;
-    // m_y = -m_y;
     return computeTimeBeforeNextWall();
 }
 
 /**
- * @brief test if it will collide with another particle 
+ * @brief Tests if the particle will collide with another particle.
  * 
- * @param Particle other, particle to check for collision  
- * @return double : time delta between collision, negative if they won't collide. 
+ * The collisions may be head-on or side-to-side 
+ * 
+ * @param other The other particle to check for collision.
+ * @return double Time delta between collision, negative if they won't collide.
  */
 double Particle::iWillCollide(Particle other) 
 {
@@ -232,6 +291,12 @@ double Particle::iWillCollide(Particle other)
     return -1;
 }
 
+/**
+ * @brief Handles a head-on collision with another particle.
+ * 
+ * @param other The other particle to collide with.
+ * @return true If the collision was successfully handled.
+ */
 bool Particle::headOnCollide(Particle& other)
 {
     double u(0);
@@ -268,6 +333,12 @@ bool Particle::headOnCollide(Particle& other)
     return true;
 }
 
+/**
+ * @brief Handles a side-to-side collision with another particle.
+ * 
+ * @param other The other particle to collide with.
+ * @return true If the collision was successfully handled.
+ */
 bool Particle::sideToSideCollide(Particle& other)
 {    
     double u = m_u;
@@ -277,15 +348,17 @@ bool Particle::sideToSideCollide(Particle& other)
     return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////
-
+/**
+ * @brief Overloads the output stream operator for the Particle class.
+ * 
+ * @param os The output stream.
+ * @param particle The particle to output.
+ * @return std::ostream& The output stream with the particle's information.
+ */
 std::ostream& operator<<(std::ostream& os, const Particle& particle) {
     os << std::setw(4) << particle.index() << "    (" <<  std::setw(5) << particle.x() << "," << std::setw(5) << particle.y() << ")" << "    (" << std::setw(2) <<particle.u() << "," <<  std::setw(2) << particle.v() << ")";
     return os;
 }
-
-
 
 
 

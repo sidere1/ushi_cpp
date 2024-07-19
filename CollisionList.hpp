@@ -2,7 +2,8 @@
 #define DEF_COLLISIONLIST
 
 /*! 
-CollisionList class
+\class CollisionList
+\brief Class for managing a collision list as a map of timings / pair of Particle index 
 */
 
 #include<iostream> 
@@ -11,9 +12,6 @@ CollisionList class
 #include <chrono>
 #include <utility> // pour std::pair
 #include <iomanip> // pour std::put_time
-
-// using TimePoint = std::chrono::system_clock::time_point;
-
 
 class CollisionList 
 {

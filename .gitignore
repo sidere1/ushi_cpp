@@ -10,7 +10,8 @@ post_process/__pycache__/
 post_process/*.mp4
 config_uchi.json
 */.DS_Store
+.DS_Store
 post_process/saved
 log
-
+doc/html/
 

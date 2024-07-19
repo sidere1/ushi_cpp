@@ -2,15 +2,11 @@
 #define DEF_BACKWARDCLUSTER
 
 /*! 
-BackwardCluster class
+\class BackwardCluster
+\brief Class for managing backward clusters and a few postprocessings, built from a CollisionList
 */
 
-#include<iostream> 
-#include <filesystem>
-#include <map>
-#include <chrono>
-#include <utility> // pour std::pair
-#include <iomanip> // pour std::put_time
+
 #include <random>
 #include "CollisionList.hpp"
 
@@ -24,7 +20,6 @@ public:
     bool exportBC(size_t nPart = 20, size_t nClu = 20);
     bool buildFromList(CollisionList cl, double t0, double t1);
     bool buildFromList(std::map<double, std::pair<size_t, size_t>>::reverse_iterator begin, std::map<double, std::pair<size_t, size_t>>::reverse_iterator end);
-    // bool buildFromList(std::map<double, std::pair<size_t, size_t>>::iterator begin, std::map<double, std::pair<size_t, size_t>>::iterator end);
 
     void checkPartInBC(size_t i, size_t p1, size_t p2, std::mt19937 &gen);
     bool computeResults(CollisionList list, double dt, double endTime);
@@ -38,17 +33,14 @@ public:
 
 
 protected: 
-    size_t m_n;
-    std::vector<std::map<size_t, size_t>> m_bc;
-    std::vector<std::map<size_t, bool>> m_alreadyRExt; // booléens pour indiquer si une particule est déjà dans les recollisions externes d'une autre, used in addRextFast 
-    bool m_verbose, m_fullFiles;
-    std::string m_cardFile, m_rintFile, m_rextFile, m_exportFile, m_resultDir;
+    size_t m_n; ///< Number of particles.
+    std::vector<std::map<size_t, size_t>> m_bc; ///< backward cluster, represented by a vector of maps : the key of the maps are the particle ids, the value is the number of collisions
+    std::vector<std::map<size_t, bool>> m_alreadyRExt; ///< booléens pour indiquer si une particule est déjà dans les recollisions externes d'une autre, used in addRextFast 
+    bool m_verbose, m_fullFiles; 
+    std::string m_cardFile, m_rintFile, m_rextFile, m_exportFile, m_resultDir; ///< filenames 
 };
 
 
 #endif
-
-
-
 
 

@@ -1,12 +1,26 @@
 #include "DynamicsManager.hpp"
 #include <fstream>
-#include "CollisionList.hpp"
-#include "Particle.hpp"
 #include <random>
 
 using namespace std;
 #define now std::chrono::high_resolution_clock::now() ;
 
+
+/**
+ * @brief Constructor for DynamicsManager
+ *
+ * @param N Number of particles
+ * @param alpha Controls the particle size, m_eps = m_alpha/m_n 
+ * @param verbose Violent console flooding on agreement of all concerned parties 
+ * @param exportAnim Enable the writing of the file required for animation creation
+ * @param resultDir Directory for result files
+ * @param inTore Perdiodic boundary conditions
+ * @param computeBC Compute backward cluster
+ * @param dtExport Time step for export
+ * @param endTime Simulation end time
+ * @param rememberSummary Remember collision summary and write corresponding file 
+ * @param arenaSize Domain size 
+ */
 DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool exportAnim, std::string resultDir, bool inTore, bool computeBC, double dtExport, double endTime, bool rememberSummary, double arenaSize):
     m_n(N),
     m_alpha(alpha),
@@ -43,8 +57,8 @@ DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool expo
         cout << "generating part list" << endl;
 
     auto t1 = now;
-    generatePartListDebug();
-    // generatePartList();
+    // generatePartListDebug();
+    generatePartList();
     if (verbose)
         cout << "initializing collision list" << endl;
     initializeCL();
@@ -56,6 +70,13 @@ DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool expo
         initialize_anim_file();
 }
 
+/**
+ * @brief generates the Particle list with random locations
+ * 
+ * Particle locations are generated randomly, and are rejected if they intersect a previous particle, or if they are too close to the walls
+ * 
+ * @return bool, true if the execution was successful 
+ */
 bool DynamicsManager::generatePartList()
 {
     // Distribution pour des doubles entre 0 et 1 et des entiers entre -1 et 1
@@ -101,7 +122,13 @@ bool DynamicsManager::generatePartList()
     return true;
 }
 
-
+/**
+ * @brief Generates the Particle list with random locations
+ *
+ * Particle locations are generated randomly, and are rejected if they intersect a previous particle, or if they are too close to the walls.
+ *
+ * @return bool True if the execution was successful
+ */
 bool DynamicsManager::generatePartListDebug()
 {
 
@@ -143,6 +170,12 @@ bool DynamicsManager::generatePartListDebug()
     return true;
 }
 
+/**
+ * @brief Prints the Particle list
+ *
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::printPartList()
 {
     auto t1 = now;
@@ -161,6 +194,16 @@ bool DynamicsManager::printPartList()
 
     return true;
 }
+
+
+/**
+ * @brief Prints the Collision list with details on the locations/speeds of the incriminated particles
+ *
+ * @param head Number of lines to print 
+ * 
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::printDetailedCollisionList(size_t head)
 {
     auto t1 = now;
@@ -187,15 +230,28 @@ bool DynamicsManager::printDetailedCollisionList(size_t head)
     return true;
 }
 
+
+/**
+ * @brief Main simulation call 
+ * 
+ * Steps : 
+ * * initialization(
+ * * while time < endTime 
+ *      * look for the next collision/wall impact
+ *      * jump to the corresponding time and perform the operation 
+ * * compute the backward clusters 
+ * * output results 
+ *
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::run()
 {
     pair<double, double> impactLocation(make_pair(0.0,0.0));
-    auto t1 = now;
-    auto t2 = now;
 
-    t1 = now;
+    auto t1 = now;
     initializeCL();
-    t2 = now;
+    auto t2 = now;
     m_initTime += chrono::duration<double, std::milli>(t2-t1).count();
 
     size_t collisionCount(0);
@@ -313,6 +369,15 @@ bool DynamicsManager::run()
     return true;
 }
 
+
+/**
+ * @brief Initializes the collision list
+ * 
+ * To be called once, at the beginning of the run 
+ *
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::initializeCL()
 {
     auto t1 = now;
@@ -335,6 +400,15 @@ bool DynamicsManager::initializeCL()
     return true;
 }
 
+
+/**
+ * @brief Manages the Particle displacements 
+ *
+ * @param dt duration before collision/wall impact 
+ * 
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::move(double dt)
 {
     auto t1 = now;
@@ -347,6 +421,13 @@ bool DynamicsManager::move(double dt)
     return true;
 }
 
+
+/**
+ * @brief Manages the collisions 
+ *
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::collide()
 {
     auto t1 = now;
@@ -396,6 +477,15 @@ bool DynamicsManager::collide()
     return true;
 }
 
+
+/**
+ * @brief Manages the wall collisions
+ *
+ * @param index Id of the particle qui vient de se bouffer un mur
+ * 
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::wallCollide(size_t index)
 {
     auto t1 = now;
@@ -423,6 +513,14 @@ bool DynamicsManager::wallCollide(size_t index)
     return true;
 }
 
+/**
+ * @brief Manages the "wall collision" in case of a periodic boundary condition 
+ *
+ * @param index Id of the particle qui vient de se bouffer un mur
+ * 
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::teleport(size_t index)
 {
     auto t1 = now;
@@ -452,7 +550,15 @@ bool DynamicsManager::teleport(size_t index)
     return true;
 }
 
-
+/**
+ * @brief Updates the particle speeds after a collision
+ *
+ * @param p1 First colliding particle 
+ * @param p2 Second colliding particle 
+ * 
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::updateSpeedFromCollision(size_t p1, size_t p2) 
 {
     // head-on collision 
@@ -481,6 +587,12 @@ bool DynamicsManager::updateSpeedFromCollision(size_t p1, size_t p2)
     return true;
 }
 
+/**
+ * @brief Computes the next wall collision time 
+ *
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::computeNextWallImpact()
 {
     m_nextWallImpactTime = 100000;
@@ -495,6 +607,12 @@ bool DynamicsManager::computeNextWallImpact()
     return true;
 }
 
+/**
+ * @brief Animation file creation 
+ *
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::initialize_anim_file()
 {
     auto t1 = now;
@@ -514,6 +632,14 @@ bool DynamicsManager::initialize_anim_file()
     return true; 
 }
 
+
+/**
+ * @brief Add a frame to the animation file 
+ * 
+ * @param impactLocation Localisation of the collision / wall impact at current time step 
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
 bool DynamicsManager::add_anim_step(std::pair<double, double> impactLocation)
 {
     auto t1 = now;
@@ -535,7 +661,8 @@ bool DynamicsManager::add_anim_step(std::pair<double, double> impactLocation)
 /**
  * @brief Great function to print a progress bar 
  * 
- * @return bool, true if the execution was successful 
+ * @return true If the operation was successful.
+ * @return false Otherwise.
  */
 bool DynamicsManager::printLoadingBar() {
     // 

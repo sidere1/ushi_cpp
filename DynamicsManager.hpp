@@ -1,13 +1,14 @@
 #ifndef DEF_DYNAMICSMANAGER
 #define DEF_DYNAMICSMANAGER
 
+
+
+
 /*! 
-DynamicsManager class
+\class DynamicsManager
+\brief Class for managing a Particle list and a CollisionList, performing a simulation and computing the BackwardCluster  
 */
 
-#include<iostream> 
-#include <map>
-#include "CollisionList.hpp"
 #include "BackwardCluster.hpp"
 #include "Particle.hpp"
 #include <array>
@@ -35,26 +36,25 @@ public:
 
 
 protected: 
-    size_t m_n;
-    double m_alpha;
-    bool m_verbose;
+    size_t m_n; ///< Number of particles. 
+    double m_alpha; ///< Controls the particle size, m_eps = m_alpha/m_n. 
+    bool m_verbose; ///< Talkative mode. 
     bool m_exportAnim;
-    // BCMatrix m_BCMatrix;
-    CollisionList m_CollisionList;
-    CollisionList m_CollisionSummary;
+    CollisionList m_CollisionList; ///< Contains all probable next collisions. This list is updated at each wall contact/collision.
+    CollisionList m_CollisionSummary; ///< Contains all collision that actually occured, used for the final postprocessing. 
     double m_endTime;
-    std::vector<Particle> m_partList;
-    double m_arenaSize;
-    double m_eps;
-    double m_time;
-    size_t m_nextWallImpactPart;
-    double m_nextWallImpactTime;
-    bool m_rememberSummary;
-    std::string m_export_file;
-    BackwardCluster m_bc;
-    std::string m_resultDir;
-    bool m_inTore, m_computeBC;
-    double m_dtExport;
+    std::vector<Particle> m_partList; ///< Vector of Particles.
+    double m_arenaSize; ///< Domain size.
+    double m_eps; ///< Particle size.
+    double m_time; ///< Current time.
+    size_t m_nextWallImpactPart; ///< Id of the next Particle that will encounter a wall. 
+    double m_nextWallImpactTime; ///< Time of the next wall impact.
+    bool m_rememberSummary; ///< Should the summary be printed to a file.
+    std::string m_export_file; 
+    BackwardCluster m_bc; ///< Backward cluster.
+    std::string m_resultDir; ///< Result directory name. 
+    bool m_inTore, m_computeBC; 
+    double m_dtExport; ///< Frequency of result export. 
 
     // mesure du temps d'execution 
     double m_verboseTime;

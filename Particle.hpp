@@ -5,9 +5,9 @@
 
 
 /*! 
-Particle class
+\class Particle
+\brief Class representing a particle with position, velocity, and methods to handle its movement and collisions.
 */
-
 
 
 class Particle 
@@ -37,11 +37,12 @@ public:
 
 
 protected: 
-    size_t m_index; 
-    double m_u, m_v;
-    double m_x, m_y;
-    double m_eps, m_L, m_maxCoord; // m_maxCoord = m_L/sqrt(2), la coordonnée maximale 
-    double m_dtBeforeNextWall;
+    size_t m_index; ///< Index of the particle.
+    double m_u, m_v; ///< Velocities of the particle.
+    double m_x, m_y; ///< Coordinates of the particle.
+    double m_eps, m_L, m_maxCoord; ///< Epsilon, length of the box, and m_maxCoord = m_L/sqrt(2), the maximum coordinate.
+    double m_dtBeforeNextWall; ///< Time before the particle hits the next wall.
+
 };
 
 

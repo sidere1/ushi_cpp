@@ -2,7 +2,6 @@
 
 #include <string>
 #include "DynamicsManager.hpp"
-#include <iostream>
 #include <fstream>
 #include "include/json.hpp"
 

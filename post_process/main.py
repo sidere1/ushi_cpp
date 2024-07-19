@@ -5,6 +5,18 @@ import re
 import matplotlib.patches as patches
 
 def read_position(s):
+    """
+    Parse a string to extract the coordinates and other information of a point.
+
+    Parameters:
+    s (str): The string containing the point information.
+
+    Returns:
+    tuple: A tuple containing the index, x and y coordinates, and u and v values.
+
+    Raises:
+    ValueError: If the string format is incorrect.
+    """
     pattern = r'\s*(\d+)\s*\(\s*(-?[0-9.eE+-]+)\s*,\s*(-?[0-9.eE+-]+)\s*\)\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)\s*'
     match = re.match(pattern, s)
     
@@ -21,15 +33,18 @@ def read_position(s):
         raise ValueError("String format is incorrect")
 
 
-
 def plot_points(positions, time, index, point_size):
     """
-    Affiche les points pour un instant donné indiqué par son indice dans la liste.
-    
+    Plot the points for a given instant specified by its index in the list.
+
     Parameters:
-    positions (list of np.array): Liste des coordonnées des points.
-    time (list of float): Liste des instants correspondants.
-    index (int): Indice de l'instant à afficher.
+    positions (list of np.array): List of point coordinates.
+    time (list of float): List of corresponding instants.
+    index (int): Index of the instant to display.
+    point_size (float): Size of the side of the diamond.
+
+    Raises:
+    ValueError: If the index is out of bounds.
     """
     if index < 0 or index >= len(positions):
         raise ValueError("Index out of bounds")
@@ -58,14 +73,15 @@ def plot_points(positions, time, index, point_size):
 
 def animate_points(positions, time, output_file='animation.mp4', point_size=0.001, impactLocations=[]):
     """
-    Crée une animation en affichant les points et le time code correspondant sur l'image
-    et enregistre l'animation dans un fichier MP4.
-    
+    Create an animation displaying the points and the corresponding time code on the image
+    and save the animation to an MP4 file.
+
     Parameters:
-    positions (list of np.array): Liste des coordonnées des points.
-    time (list of float): Liste des instants correspondants.
-    output_file (str): Nom du fichier de sortie pour l'animation MP4.
-    point_size (float): Taille du côté du losange.
+    positions (list of np.array): List of point coordinates.
+    time (list of float): List of corresponding instants.
+    output_file (str): Name of the output file for the MP4 animation.
+    point_size (float): Size of the side of the diamond.
+    impactLocations (np.array): List of impact locations for each frame.
     """
     fig, ax = plt.subplots()
     title = ax.set_title('')
@@ -81,12 +97,34 @@ def animate_points(positions, time, output_file='animation.mp4', point_size=0.00
         return []
 
     def create_diamond(x, y, size):
+        """
+        Create a diamond-shaped patch.
+
+        Parameters:
+        x (float): X coordinate of the center of the diamond.
+        y (float): Y coordinate of the center of the diamond.
+        size (float): Size of the side of the diamond.
+
+        Returns:
+        patches.Polygon: A polygon representing the diamond.
+        """
         half_size = size / 2
         diamond = np.array([[x - half_size, y], [x, y + half_size], 
                             [x + half_size, y], [x, y - half_size]])
         return patches.Polygon(diamond, closed=True)
     
     def create_circle(x, y, size):
+        """
+        Create a circle-shaped patch.
+
+        Parameters:
+        x (float): X coordinate of the center of the circle.
+        y (float): Y coordinate of the center of the circle.
+        size (float): Diameter of the circle.
+
+        Returns:
+        patches.Circle: A circle patch.
+        """
         radius = size / 2
         circle = patches.Circle((x, y), radius)
         return circle
@@ -183,5 +221,4 @@ point_size = eps
 animate_points(positions, time, point_size=eps, impactLocations=impactLocations)
 # plot_points(positions, time, n_time-1, eps)
 ### plot_points(positions, time, n_time-1, point_size*50)
-f.close() 
-
+f.close()
