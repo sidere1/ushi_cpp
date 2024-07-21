@@ -38,7 +38,7 @@ BackwardCluster::BackwardCluster(size_t N, bool verbose, string resultDir):m_n(N
 bool BackwardCluster::printBC(size_t nPart, size_t nClu)
 {
     cout << "Backward clusters " << endl; 
-    if (nPart < m_n)
+    if (nPart > m_n)
         nPart = m_n;
     for (size_t iPart = 0 ; iPart < nPart ; iPart++)
     {
@@ -68,7 +68,7 @@ bool BackwardCluster::exportBC(size_t nPart, size_t nClu)
     if (!outfile)
         return false; 
 
-    if (nPart < m_n)
+    if (nPart > m_n)
         nPart = m_n;
     outfile << "Backward clusters (truncated for the " << nPart << " first particles and their " << nClu << " first items)" << endl; 
     for (size_t iPart = 0 ; iPart < nPart ; iPart++)

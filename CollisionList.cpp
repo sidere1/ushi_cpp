@@ -84,6 +84,8 @@ bool CollisionList::printList()
  */
 bool CollisionList::printList(size_t head) 
 {
+    if (head > m_list.size())
+        head = m_list.size();
     cout << "--------------------------------" << endl;
     cout << "Collision list (" << head << "/" << m_list.size() << " entries)" << endl;
     cout << "  Time    i    j" << endl;
@@ -91,7 +93,8 @@ bool CollisionList::printList(size_t head)
     size_t count = 0;
     for (const auto& [key, value] : m_list) {
         std::cout << std::setw(6) << key << std::setw(5) << value.first << std::setw(5) << value.second << std::endl;
-        if (count++ > head)
+        count++;
+        if (count > head)
             break;
     }
     cout << "--------------------------------" << endl << endl;
