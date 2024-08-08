@@ -15,6 +15,7 @@ class Particle
 public:
     Particle();
     Particle(size_t ind, double x, double y, double u, double v, double eps, double L);
+    bool isValid() const;
     bool intersects(const Particle& other) const;
     bool isOutsideTheBox() const;
     bool move(double dt);

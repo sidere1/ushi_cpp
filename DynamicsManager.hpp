@@ -11,15 +11,17 @@
 
 #include "BackwardCluster.hpp"
 #include "Particle.hpp"
+#include "include/json.hpp"
 #include <array>
 
 
 class DynamicsManager 
 {
 public:
-    DynamicsManager(size_t N, double alpha, bool verbose, bool exportAnim, std::string resultDir, bool inTore, bool computeBC, double dtExport, double endTime, bool rememberSummary, double arenaSize);
+    DynamicsManager(size_t N, double alpha, bool verbose, bool exportAnim, std::string resultDir, bool inTore, bool computeBC, double dtExport, double endTime, bool rememberSummary, double arenaSize, bool generateFromFile=false, std::string partListFile="");
     bool generatePartList();
     bool generatePartListDebug();
+    bool generatePartListFromFile();
     bool printPartList();
     bool printDetailedCollisionList(size_t head);
     bool run();
@@ -45,6 +47,8 @@ protected:
     double m_endTime;
     std::vector<Particle> m_partList; ///< Vector of Particles.
     double m_arenaSize; ///< Domain size.
+    bool m_generateFromFile;
+    std::string m_partListFile;
     double m_eps; ///< Particle size.
     double m_time; ///< Current time.
     size_t m_nextWallImpactPart; ///< Id of the next Particle that will encounter a wall. 

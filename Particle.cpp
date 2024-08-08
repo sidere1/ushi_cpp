@@ -16,6 +16,44 @@ int sign(double i) {
 Particle::Particle()
 {}
 
+
+/**
+ * @brief Constructs a Particle with specified parameters.
+ * 
+ * @param ind Index of the particle.
+ * @param x X-coordinate of the particle.
+ * @param y Y-coordinate of the particle.
+ * @param u X-velocity of the particle.
+ * @param v Y-velocity of the particle.
+ * @param eps particle width (diagonal of the corresponding square).
+ * @param L Length of the box.
+ */
+Particle::Particle(size_t ind, double x, double y, double u, double v, double eps, double L)
+    : m_index(ind), m_u(u), m_v(v), m_x(x), m_y(y), m_eps(eps), m_L(L), m_maxCoord(m_L*sqrt(2)/2)
+{
+    // check that u/v are not both zero nor both non-zero
+    if ((u == 0 && v == 0) || (u != 0 && v != 0))
+    {
+        cout << "CAUTION ! invalid particle velocity" << endl;
+    }
+    computeTimeBeforeNextWall();
+}
+
+/**
+ * @brief Checks if this particle is valid (velocity and position)
+ * 
+ * @return true If the particles is valid.
+ * @return false otherwise.
+ */
+bool Particle::isValid() const 
+{
+    if (isOutsideTheBox())
+        return false;
+    if ((u() == 0 && v() == 0) || (u() != 0 && v() != 0))
+        return false; 
+    return true;
+}
+
 /**
  * @brief Checks if this particle intersects with another particle.
  * 
@@ -54,27 +92,6 @@ bool Particle::isOutsideTheBox() const
     return false;
 }
 
-/**
- * @brief Constructs a Particle with specified parameters.
- * 
- * @param ind Index of the particle.
- * @param x X-coordinate of the particle.
- * @param y Y-coordinate of the particle.
- * @param u X-velocity of the particle.
- * @param v Y-velocity of the particle.
- * @param eps particle width (diagonal of the corresponding square).
- * @param L Length of the box.
- */
-Particle::Particle(size_t ind, double x, double y, double u, double v, double eps, double L)
-    : m_index(ind), m_u(u), m_v(v), m_x(x), m_y(y), m_eps(eps), m_L(L), m_maxCoord(m_L*sqrt(2)/2)
-{
-    // check that u/v are not both zero nor both non-zero
-    if ((u == 0 && v == 0) || (u != 0 && v != 0))
-    {
-        cout << "CAUTION ! invalid particle velocity" << endl;
-    }
-    computeTimeBeforeNextWall();
-}
 
 /**
  * @brief Moves the particle by a specified time step.

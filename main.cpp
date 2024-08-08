@@ -3,7 +3,6 @@
 #include <string>
 #include "DynamicsManager.hpp"
 #include <fstream>
-#include "include/json.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -36,9 +35,13 @@ int main(int argc, char** argv)
     double m_endTime = config["endTime"];
     bool m_rememberSummary = config["rememberSummary"];
     double m_arenaSize = config["arenaSize"];
+    bool generateFromFile = config["generateFromFile"];
+    string partListFile = "";
+    if (generateFromFile)
+        partListFile = config["partListFile"];
 
     // Création du dynamicsmanager et run 
-    DynamicsManager d(N, alpha, verbose, exportAnim, resultsDir, inTore, computeBC, dtExport, m_endTime, m_rememberSummary, m_arenaSize);
+    DynamicsManager d(N, alpha, verbose, exportAnim, resultsDir, inTore, computeBC, dtExport, m_endTime, m_rememberSummary, m_arenaSize, generateFromFile, partListFile);
     d.run();
     
     return 0;

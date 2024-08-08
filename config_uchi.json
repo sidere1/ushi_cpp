@@ -1,13 +1,15 @@
 {
-  "N": 10,
+  "N": 100,
   "alpha": 1.0,
   "verbose": true,
-  "exportAnim": false,
+  "exportAnim": true,
   "resultsDir": "output",
   "inTore": true,
   "computeBC": true,
-  "dtExport": 0.1,
+  "dtExport": 0.2,
   "endTime": 2,
   "rememberSummary": true,
-  "arenaSize": 1.0
+  "arenaSize": 1.0,
+  "generateFromFile":true,
+  "partListFile": "/Users/silouane/Documents/suivi/IDEE_Ayi/Code/ushi_cpp/inputPartList.uchi"
 }

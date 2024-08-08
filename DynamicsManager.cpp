@@ -3,6 +3,7 @@
 #include <random>
 
 using namespace std;
+using json = nlohmann::json;
 #define now std::chrono::high_resolution_clock::now() ;
 
 
@@ -21,7 +22,7 @@ using namespace std;
  * @param rememberSummary Remember collision summary and write corresponding file 
  * @param arenaSize Domain size 
  */
-DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool exportAnim, std::string resultDir, bool inTore, bool computeBC, double dtExport, double endTime, bool rememberSummary, double arenaSize):
+DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool exportAnim, std::string resultDir, bool inTore, bool computeBC, double dtExport, double endTime, bool rememberSummary, double arenaSize, bool generateFromFile, std::string partListFile):
     m_n(N),
     m_alpha(alpha),
     m_verbose(verbose),
@@ -31,6 +32,8 @@ DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool expo
     m_CollisionSummary(CollisionList(N, verbose, resultDir)),
     m_endTime(endTime),
     m_arenaSize(arenaSize),
+    m_generateFromFile(generateFromFile),
+    m_partListFile(partListFile),
     m_eps(m_alpha/m_n),
     m_time(0),
     m_nextWallImpactTime(1000000),
@@ -53,12 +56,17 @@ DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool expo
     cout << " * m_n = " << m_n << endl << " * m_endTime = " << m_endTime << endl << " * m_arenaSize = " << m_arenaSize << endl << " * m_eps = " << m_eps << endl << " * m_resultDir = " << m_resultDir << endl << " * m_inTore = " << m_inTore << endl << " * m_computeBC = " << m_computeBC << endl << " * m_dtExport = " << m_dtExport << endl;
     cout << "-------------------------- " << endl << endl;
     
-    if (verbose)
-        cout << "generating part list" << endl;
+    
+    cout << "generating particle list" << endl;
 
     auto t1 = now;
-    // generatePartListDebug();
-    generatePartList();
+    // generatePartListDebug(); // l'appel à generatePartListDebug() au lieu de generatePartList permet de créer manuellement la liste des particules. 
+    // generatePartList();
+
+    if (m_generateFromFile)
+        generatePartListFromFile();
+    else 
+        generatePartList();
     if (verbose)
         cout << "initializing collision list" << endl;
     initializeCL();
@@ -123,9 +131,9 @@ bool DynamicsManager::generatePartList()
 }
 
 /**
- * @brief Generates the Particle list with random locations
+ * @brief Generates the Particle list by hand. TO BE REMOVED SHORTLY. 
  *
- * Particle locations are generated randomly, and are rejected if they intersect a previous particle, or if they are too close to the walls.
+ * Please do not use me, I am deprecated and will be removed in a very very near future. 
  *
  * @return bool True if the execution was successful
  */
@@ -169,6 +177,58 @@ bool DynamicsManager::generatePartListDebug()
     m_partList.push_back(p12);
     return true;
 }
+
+
+/**
+ * @brief Generates the Particle list from an input file 
+ *
+ * Particle locations are generated randomly, and are rejected if they intersect a previous particle, or if they are too close to the walls.
+ *
+ * @return bool True if the execution was successful
+ */
+bool DynamicsManager::generatePartListFromFile()
+{
+    ifstream inputFile(m_partListFile);
+    if (!inputFile) {
+        cerr << "Could not open uchi config file " << m_partListFile << endl;
+        // déclencher un run ? S'arrêter là tout de suite ? Générer aléatoirement ? Une seule particule ? 
+        return false;
+    }
+    cout << "Importing the particle list " << endl;
+
+    json partList;
+    inputFile >> partList;
+ 
+    m_n = partList["particles"].size();
+    cout << "m_n = " << m_n << endl;
+    m_eps = m_alpha/m_n;
+
+    Particle p;
+    double x, y, u, v;
+    size_t partId(0); 
+
+    for (size_t iPart = 0 ; iPart < m_n ; iPart++)
+    {
+        x = partList["particles"][iPart]["x"];
+        y = partList["particles"][iPart]["y"];
+        u = partList["particles"][iPart]["u"];
+        v = partList["particles"][iPart]["v"];
+        p = Particle(partId, x, y, u, v, m_eps, m_arenaSize);
+        if (p.isValid())
+        {
+            m_partList.push_back(p);
+            partId++;
+        }
+        else 
+        {
+            cout << "Rejecting invalid particle " << iPart << " : " << p << endl;
+        }
+    }
+    return true;
+}
+
+    
+
 
 /**
  * @brief Prints the Particle list
@@ -664,8 +724,8 @@ bool DynamicsManager::add_anim_step(std::pair<double, double> impactLocation)
  * @return true If the operation was successful.
  * @return false Otherwise.
  */
-bool DynamicsManager::printLoadingBar() {
-    // 
+bool DynamicsManager::printLoadingBar() 
+{
     int barWidth = 50; // Largeur de la barre de progression
     double progress = m_time / m_endTime;
     int pos = static_cast<int>(barWidth * progress);
