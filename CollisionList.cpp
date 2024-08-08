@@ -10,7 +10,7 @@ using namespace std;
  * @param N Number of particles.
  * @param verbose Verbose mode flag.
  */
-CollisionList::CollisionList(size_t N, bool verbose):m_n(N), m_verbose(verbose), m_flush(false)
+CollisionList::CollisionList(size_t N, bool verbose):m_n(N), m_verbose(verbose), m_flush(false), m_doublon(0)
 {
     m_maxSize = 10000000000;
     m_hasFlushed = false;
@@ -25,7 +25,7 @@ CollisionList::CollisionList(size_t N, bool verbose):m_n(N), m_verbose(verbose),
  * @param verbose Verbose mode flag.
  * @param resultDir Directory to store the results.
  */
-CollisionList::CollisionList(size_t N, bool verbose, string resultDir):m_n(N), m_verbose(verbose), m_flush(true), m_resultDir(resultDir)
+CollisionList::CollisionList(size_t N, bool verbose, string resultDir):m_n(N), m_verbose(verbose), m_flush(true), m_resultDir(resultDir), m_doublon(0)
 {
     m_maxSize = 10000000000;
     // m_maxSize = 10;
@@ -49,6 +49,15 @@ bool CollisionList::addCollision(double t, size_t i, size_t j)
 {
     if (i > m_n) cout << "you asked for particle " << i << " which does not exist" << endl;
     if (j > m_n) cout << "you asked for particle " << j << " which does not exist" << endl;
+    if (m_list.find(t) != m_list.end()) // in stp::map, only one value per key ! If the time already exists, the previous collision would be erased ! 
+    {
+        double epsilon(numeric_limits<double>::epsilon());
+        do
+        {
+            t += epsilon;
+        }while(m_list.find(t)!= m_list.end());
+        m_doublon++;
+    }
     m_list[t] = std::make_pair(i, j);
     if (m_flush)
         if (m_list.size() > m_maxSize)

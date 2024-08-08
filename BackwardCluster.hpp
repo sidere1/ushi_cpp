@@ -30,12 +30,14 @@ public:
     bool initializeRext();
     // bool addRext(double t); // deprecated 
     bool addRextFast(double t); // prevents from recomputing all previous external recollisions 
+    bool printLoadingBar(double t, double endTime);
 
 
 protected: 
     size_t m_n; ///< Number of particles.
     std::vector<std::map<size_t, size_t>> m_bc; ///< backward cluster, represented by a vector of maps : the key of the maps are the particle ids, the value is the number of collisions
     std::vector<std::map<size_t, bool>> m_alreadyRExt; ///< booléens pour indiquer si une particule est déjà dans les recollisions externes d'une autre, used in addRextFast 
+    // std::vector<std::unordered_map<size_t, bool>> m_alreadyRExt; ///< booléens pour indiquer si une particule est déjà dans les recollisions externes d'une autre, used in addRextFast 
     bool m_verbose, m_fullFiles; 
     std::string m_cardFile, m_rintFile, m_rextFile, m_exportFile, m_resultDir; ///< filenames 
 };

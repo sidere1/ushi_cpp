@@ -39,6 +39,7 @@ protected:
     bool m_hasFlushed;
     std::string m_resultDir, m_flushFile;
     size_t m_maxSize;
+    size_t m_doublon;
 };
 
 

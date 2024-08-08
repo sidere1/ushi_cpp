@@ -8,17 +8,15 @@ DEPENDS := $(patsubst %.cpp,%.d,$(SOURCES))
 
 ifeq ($(UNAME), Darwin)
 CXXFLAGS := -std=c++17 -g -O3 -march=native 
-LIBS = #-I/opt/homebrew/Cellar/eigen/3.4.0_1/lib/  #-I/opt/homebrew/Cellar/boost/1.82.0_1/include/ -I/Users/silouane/Documents/code/libs/boost/1.72.0 
-LINKS = #-I/opt/homebrew/include -L/opt/homebrew/lib #-lboost_filesystem
-endif
-ifeq ($(UNAME), Linux)
-CXXFLAGS := -std=c++11 -g -O3 -march=native
-LIBS = -I/usr/include -L/usr/lib
-# LINKS = -lboost_system -L/home/silouane/Documents/logiciels/SALOME-9.2.0-UB18.04-SRC/BINARIES-UB18.04/boost/lib/ -lboost_filesystem
+LIBS =  
 LINKS = 
 endif
+# ifeq ($(UNAME), Linux)
+# CXXFLAGS := -std=c++11 -g -O3 -march=native
+# LIBS = -I/usr/include -L/usr/lib
+# LINKS = 
+# endif
 
-# ADD MORE WARNINGS!
 WARNING := -Wall -Wextra -pedantic
 
 # .PHONY means these rules get executed even if

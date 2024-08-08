@@ -190,8 +190,10 @@ bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime
         addRextFast(endTime - t0);
         t2 = now;
         rExtTime += chrono::duration<double, std::milli>(t2-t1).count();
+
+        printLoadingBar(endTime - t0, endTime);
     }
-    std::cout << "Backward cluster detailed chrono :" << endl << "building " << buildTime << " ms " << endl << "card : " << cardTime << " ms " << endl << "rInt : " << rIntTime << " ms " << endl << "rExt : " << rExtTime << endl; 
+    std::cout << endl << "Backward cluster detailed chrono :" << endl << "building " << buildTime << " ms " << endl << "card : " << cardTime << " ms " << endl << "rInt : " << rIntTime << " ms " << endl << "rExt : " << rExtTime << endl; 
     return true;
 }
 
@@ -368,35 +370,86 @@ bool BackwardCluster::addRextFast(double t)
     if (!outfile)
         return false; 
     
+    // auto t1 = now;
+    // auto t2 = now;
+    // double skipTime(0);
+    // double charbonTime(0);
+
     double rext(0);
-    double rextProba(0);
-    #pragma omp parallel for reduction(+:rextProba)
     for (size_t iPart = 0; iPart < m_n; iPart++)
     {
-        rext = 0;
         const auto& bci = m_bc[iPart];
         for (size_t jPart = iPart+1; jPart < m_n; jPart++)
         {
+            // t1 = now;
             if (m_alreadyRExt[iPart].find(jPart) != m_alreadyRExt[iPart].end())
             {
-                rext += 1;
-                break;
+                rext++;
+                // t2 = now;
+                // skipTime += chrono::duration<double, std::milli>(t2-t1).count();
             }
-            const auto& bcj = m_bc[jPart];
-            for (auto it = bci.begin() ; it != bci.end() ; it++)
+            else 
             {
-                if (bcj.find(it->first) != bcj.end())
+                // t1 = now;
+                const auto& bcj = m_bc[jPart];
+                if (bci.size() < bcj.size())
                 {
-                    rext += 1;
-                    m_alreadyRExt[iPart][jPart] = true;
-                    break;
-                } 
+                    for (auto it = bci.begin() ; it != bci.end() ; it++)
+                    {
+                        if (bcj.find(it->first) != bcj.end())
+                        {
+                            rext++;
+                            m_alreadyRExt[iPart][jPart] = true;
+                            break;
+                        }
+                    }
+                }
+                else 
+                {
+                    for (auto it = bcj.begin() ; it != bcj.end() ; it++)
+                    {
+                        if (bci.find(it->first) != bci.end())
+                        {
+                            rext++;
+                            m_alreadyRExt[iPart][jPart] = true;
+                            break;
+                        }
+                    }
+                }
+                // t2 = now;
+                // charbonTime += chrono::duration<double, std::milli>(t2-t1).count();
             }
         }
-        if (rext > 0)
-            rextProba++;
     }
-    // cout << "rextProba = " << rextProba << " 2*rextProba/(m_n*(m_n-1)) = " << 2*rextProba/(m_n*(m_n-1)) << endl;
-    outfile << std::setw(12) << t << std::setw(12) << 2*rextProba/(m_n*(m_n-1)) << endl;
+    // cout <<  " ; skipTime = " << skipTime << " ; charbonTime = " << charbonTime << endl;
+    outfile << std::setw(12) << t << std::setw(12) << 2*rext/(m_n*(m_n-1)) << endl;
     return true;
 }
+
+
+
+/**
+ * @brief Great function to print a progress bar 
+ * 
+ * @return true If the operation was successful.
+ * @return false Otherwise.
+ */
+bool BackwardCluster::printLoadingBar(double t, double endTime) 
+{
+    int barWidth = 50; // Largeur de la barre de progression
+    double progress = t / endTime;
+    int pos = static_cast<int>(barWidth * progress);
+
+    // erasing the line and reprinting 
+    std::cout << "\r[";
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < pos) std::cout << "*";
+        else std::cout << " ";
+    }
+    std::cout << "] " << int(progress * 100.0) << " %";
+    std::cout.flush();
+    return true; 
+}
+
+
+
