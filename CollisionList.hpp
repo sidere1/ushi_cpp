@@ -27,6 +27,8 @@ public:
     size_t size();
     bool flush();
     bool unflush();
+    bool read(const std::string& collisionFile);
+
     bool hasFlushed() {return m_hasFlushed;};
 
     std::map<double, std::pair<size_t, size_t>> list() {return m_list;};

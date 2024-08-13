@@ -14,7 +14,12 @@ using namespace std;
  * @param verbose Talkative mode.
  * @param resultDir Directory to save results.
  */
-BackwardCluster::BackwardCluster(size_t N, bool verbose, string resultDir):m_n(N), m_verbose(verbose), m_resultDir(resultDir)
+BackwardCluster::BackwardCluster(size_t N, bool verbose, string resultDir, double dtExport, double endTime):
+    m_n(N), 
+    m_verbose(verbose), 
+    m_resultDir(resultDir),
+    m_dtExport(dtExport),
+    m_endTime(endTime)
 {
     m_bc.resize(m_n);
     m_alreadyRExt.resize(m_n);
@@ -144,9 +149,10 @@ bool BackwardCluster::buildFromList(std::map<double, std::pair<size_t, size_t>>:
  * @return true If computation is successful.
  * @return false If an error occurs.
  */
-bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime)
+// bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime)
+bool BackwardCluster::computeResults(CollisionList cl)
 {
-    double t0 = endTime;
+    double t0 = m_endTime;
 
     auto t1 = now;
     auto t2 = now;
@@ -158,7 +164,7 @@ bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime
     initializeCard();
     initializeRint();
     initializeRext();
-    size_t nInterval = (size_t)ceil(endTime/dt);
+    size_t nInterval = (size_t)ceil(m_endTime/m_dtExport);
 
     std::map<double, std::pair<size_t, size_t>> cl_list = cl.list();
     auto it = cl_list.rbegin();
@@ -166,7 +172,7 @@ bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime
 
     for (size_t iInterval = 0; iInterval < nInterval; iInterval++)
     {
-        t0 -= dt;
+        t0 -= m_dtExport;
         auto begin = it;
         while (it != itEnd && it->first >= t0)
         {
@@ -178,22 +184,46 @@ bool BackwardCluster::computeResults(CollisionList cl, double dt, double endTime
         t2 = now;
         buildTime += chrono::duration<double, std::milli>(t2-t1).count();
         t1 = now;
-        addCard(endTime - t0);
+        addCard(m_endTime - t0);
         t2 = now;
         cardTime += chrono::duration<double, std::milli>(t2-t1).count();
         t1 = now;
-        addRint(endTime - t0);
+        addRint(m_endTime - t0);
         t2 = now;
         rIntTime += chrono::duration<double, std::milli>(t2-t1).count();
         t1 = now;
         // addRext(endTime - t0);
-        addRextFast(endTime - t0);
+        addRextFast(m_endTime - t0);
         t2 = now;
         rExtTime += chrono::duration<double, std::milli>(t2-t1).count();
 
-        printLoadingBar(endTime - t0, endTime);
+        printLoadingBar(m_endTime - t0, m_endTime);
     }
     std::cout << endl << "Backward cluster detailed chrono :" << endl << "building " << buildTime << " ms " << endl << "card : " << cardTime << " ms " << endl << "rInt : " << rIntTime << " ms " << endl << "rExt : " << rExtTime << endl; 
+    return true;
+}
+
+
+/**
+ * @brief Compute results based on collisions, time step, and end time.
+ * 
+ * Build the backward clusters, compute at regular intervals some postprocessings and write them in output files 
+ * Postprocessings 
+ *  * cardinality
+ *  * internal recollisions
+ *  * external recollisions 
+ * 
+ * @param cl Collision list.
+ * @param dt Export time step.
+ * @param endTime End time of the simulation.
+ * @return true If computation is successful.
+ * @return false If an error occurs.
+ */
+bool BackwardCluster::processExternalFile(std::string collisionFile)
+{
+    CollisionList cl(m_n, m_verbose, m_resultDir);
+    cl.read(collisionFile);
+    computeResults(cl);
     return true;
 }
 

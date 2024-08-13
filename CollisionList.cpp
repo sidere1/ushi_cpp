@@ -1,6 +1,11 @@
 #include "CollisionList.hpp"
 #include <fstream>
 #include <iomanip>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <limits>
+
 
 using namespace std;
 
@@ -31,6 +36,8 @@ CollisionList::CollisionList(size_t N, bool verbose, string resultDir):m_n(N), m
     // m_maxSize = 10;
     m_flushFile = m_resultDir + "/collisionList.uchi";
     ofstream outfile(m_flushFile);
+    if (outfile)
+        outfile << "# N = " << N << endl;
     m_hasFlushed = false;
 
     m_flush = false; // option pas encore codée ! Pas sûr que ce soit nécessaire non plus. 
@@ -196,6 +203,100 @@ bool CollisionList::flush()
 }
 
 /**
+ * @brief Reads the collision list from a file.
+ * 
+ * @return true If the list was read successfully.
+ * @return false Otherwise
+ */
+// bool CollisionList::read(string collisionFile)
+// {
+//     ifstream infile(m_flushFile);
+//     if (!infile)
+//         return false; 
+    
+//     string temp;
+//     double t;
+//     size_t N, i, j;
+//     infile >> temp; // #
+//     cout << "temp = " << temp << endl;
+//     infile >> temp; // N
+//     cout << "temp = " << temp << endl;
+//     infile >> temp; // =
+//     cout << "temp = " << temp << endl;
+//     infile >> N; 
+//     if (N != m_n)
+//     {
+//         cout << "expected '# N " << m_n << "', but I got " << N << endl;
+//         return false;
+//     }
+//     cout << "N = " << N << endl;
+
+//     while (!infile.eof())
+//     {
+//         infile >> t;
+//         cout << "t = " << t << endl;
+//         infile >> i;
+//         infile >> j;
+//         cout << "adding collision " << t << " : " << i << " ; " << j << endl;
+//         // addCollision(t, i, j);
+//     }
+    
+//     m_hasFlushed = false;
+//     return true;
+// }
+
+bool CollisionList::read(const string& collisionFile)
+{
+    ifstream infile(collisionFile);
+    if (!infile) 
+    {
+        cout << "Error: Unable to open file " << collisionFile << endl;
+        return false;
+    }
+
+    // Reading header 
+    string line;
+    if (!getline(infile, line)) 
+    {
+        cerr << "Error: File is empty or first line is missing." << endl;
+        return false;
+    }
+    istringstream headerStream(line);
+    string hash, n, equalSign;
+    size_t N;
+
+    if (!(headerStream >> hash >> n >> equalSign >> N) || hash != "#" || n !="N" || equalSign != "=" || N != m_n) {
+        cerr << "Error: Expected '# = " << m_n << "', but got '" << line << "'." << endl;
+        return false;
+    }
+
+    // Reading the rest of the collision file 
+    size_t nColl(0);
+    while (getline(infile, line)) 
+    {
+        if (line.empty()) {
+            continue; 
+        }
+
+        istringstream lineStream(line);
+        double t;
+        size_t i, j;
+
+        if (!(lineStream >> t >> i >> j) || i >= N || j >= N) 
+        {
+            cerr << "Error: Malformed line or indices out of range in line: '" << line << "'." << endl;
+            return false;
+        }
+        // cout << "Adding collision " << t << " : " << i << " ; " << j << endl;
+        addCollision(t, i, j);
+        nColl++;
+    }
+    cout << nColl << " collisions have been read from " << collisionFile << endl;
+    return true;
+}
+
+
+/**
  * @brief Unflushes the collision list from a file.
  * 
  * NOT CODED YET. You may do it if memory consumption is too large for your application and the collision summary takes too much ram :) 
@@ -206,15 +307,7 @@ bool CollisionList::flush()
 bool CollisionList::unflush()
 {
     flush();
-    ifstream infile(m_flushFile);
-    if (!infile)
-        return false; 
-    
-    cout << "LA FONCTION UNFLUSH N'A PAS ENCORE ÉTÉ CODÉE" << endl;
-    // string temp;
-    // while (infile >> temp)
-    // {};
-    
+    read(m_flushFile);
     m_hasFlushed = false;
     return true;
 }

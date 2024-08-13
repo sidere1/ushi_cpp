@@ -32,17 +32,33 @@ int main(int argc, char** argv)
     bool inTore = config["inTore"];
     bool computeBC = config["computeBC"];
     double dtExport = config["dtExport"];
-    double m_endTime = config["endTime"];
-    bool m_rememberSummary = config["rememberSummary"];
-    double m_arenaSize = config["arenaSize"];
+    double endTime = config["endTime"];
+    bool rememberSummary = config["rememberSummary"];
+    double arenaSize = config["arenaSize"];
     bool generateFromFile = config["generateFromFile"];
     string partListFile = "";
     if (generateFromFile)
         partListFile = config["partListFile"];
+    bool postprocessSolely = config["postprocessSolely"];
+    string collisionFile = "";
+    if (postprocessSolely)
+        collisionFile = config["collisionFile"];
 
-    // Création du dynamicsmanager et run 
-    DynamicsManager d(N, alpha, verbose, exportAnim, resultsDir, inTore, computeBC, dtExport, m_endTime, m_rememberSummary, m_arenaSize, generateFromFile, partListFile);
-    d.run();
+    
+
+    if (postprocessSolely)
+    {
+        // Lecture du fichier de résultats et post-traitement 
+        BackwardCluster bc(N, verbose, resultsDir, dtExport, endTime);
+        bc.processExternalFile("/Users/silouane/Documents/suivi/IDEE_Ayi/Code/ushi_cpp/output/collisionList.uchi.saved");
+    }
+    else 
+    {
+        // Création du dynamicsmanager et run 
+        DynamicsManager d(N, alpha, verbose, exportAnim, resultsDir, inTore, computeBC, dtExport, endTime, rememberSummary, arenaSize, generateFromFile, partListFile);
+        d.run();
+    }
+
     
     return 0;
 }

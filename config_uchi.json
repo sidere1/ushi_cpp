@@ -10,6 +10,8 @@
   "endTime": 2,
   "rememberSummary": true,
   "arenaSize": 1.0,
-  "generateFromFile":true,
-  "partListFile": "/Users/silouane/Documents/suivi/IDEE_Ayi/Code/ushi_cpp/inputPartList.uchi"
+  "generateFromFile":false,
+  "partListFile": "/Users/silouane/Documents/suivi/IDEE_Ayi/Code/ushi_cpp/inputPartList.uchi",
+  "postprocessSolely":true,
+  "collisionFile": "/Users/silouane/Documents/suivi/IDEE_Ayi/Code/ushi_cpp/output/collisionList.uchi.saved"
 }

@@ -48,9 +48,15 @@ Particle::Particle(size_t ind, double x, double y, double u, double v, double ep
 bool Particle::isValid() const 
 {
     if (isOutsideTheBox())
+    {
+        cout << "it is outside the box" << endl;
         return false;
+    }
     if ((u() == 0 && v() == 0) || (u() != 0 && v() != 0))
+    {
+        cout << "Velocit yproblem" << endl;
         return false; 
+    }
     return true;
 }
 
@@ -81,12 +87,10 @@ bool Particle::isOutsideTheBox() const
 {
     if  ((abs(m_x) + abs(m_y) + m_eps > m_maxCoord*0.98))
     {
-        // cout << "Elle est trop loin ta particule mon gars !"  << endl;
         return true ;
     }
     if  ((abs(m_x) < 0.001) ||(abs(m_y) < 0.001)  )
     {
-        // cout << "ça risque de taper bizarrement dans les coins, dans le doute je préfère virer ce cas-là" << endl;
         return true ;
     }
     return false;

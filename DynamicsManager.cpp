@@ -39,7 +39,7 @@ DynamicsManager::DynamicsManager(size_t N, double alpha, bool verbose, bool expo
     m_nextWallImpactTime(1000000),
     m_rememberSummary(rememberSummary),
     m_export_file(resultDir + "/summary.uchi"),
-    m_bc(BackwardCluster(N, verbose, resultDir)),
+    m_bc(BackwardCluster(N, verbose, resultDir, dtExport, endTime)),
     m_resultDir(resultDir),
     m_inTore(inTore),
     m_computeBC(computeBC),
@@ -415,7 +415,8 @@ bool DynamicsManager::run()
             m_CollisionSummary.printList(10);
         }
         
-        m_bc.computeResults(m_CollisionSummary, m_dtExport, m_endTime);
+        // m_bc.computeResults(m_CollisionSummary, m_dtExport, m_endTime);
+        m_bc.computeResults(m_CollisionSummary);
     }
     if (m_rememberSummary)
     {
